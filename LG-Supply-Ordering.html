@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liquid Graphics — Supply Ordering</title>
+<style>
+:root{--primary:#1e40af;--primary-light:#3b82f6;--primary-pale:#eff6ff;--success:#059669;--warning:#d97706;--danger:#dc2626;--bg:#f1f5f9;--card:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--shadow:0 1px 3px rgba(0,0,0,.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+a{color:var(--primary);text-decoration:none}
+
+/* Header */
+.hdr{background:var(--primary);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.hdr-logo{font-size:18px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+.hdr-logo span{opacity:.8;font-size:13px;font-weight:400}
+.hdr-badge{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:4px 14px;border-radius:20px;font-size:13px;font-weight:500}
+
+/* Layout */
+.wrap{max-width:1200px;margin:0 auto;padding:24px}
+
+/* Tabs */
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:24px;gap:0}
+.tab{padding:10px 22px;cursor:pointer;font-size:14px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+.tab:hover{color:var(--primary)}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+
+/* Cards */
+.card{background:var(--card);border-radius:12px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+.card-hdr{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.card-hdr h3{font-size:15px;font-weight:600}
+.card-body{padding:20px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px}
+.stat{background:var(--card);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow)}
+.stat-val{font-size:30px;font-weight:700;color:var(--primary);line-height:1}
+.stat-lbl{font-size:12px;color:var(--muted);margin-top:5px}
+.stat.warn .stat-val{color:var(--warning)}
+.stat.danger .stat-val{color:var(--danger)}
+.stat.ok .stat-val{color:var(--success)}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.b-ok{background:#d1fae5;color:#065f46}
+.b-low{background:#fef3c7;color:#92400e}
+.b-crit{background:#fee2e2;color:#991b1b}
+.b-pending{background:#dbeafe;color:#1e40af}
+.b-ordered{background:#e0e7ff;color:#3730a3}
+.b-fulfilled{background:#d1fae5;color:#065f46}
+.b-cancelled{background:#f1f5f9;color:#64748b}
+.b-demo{background:#fef3c7;color:#92400e}
+
+/* Alerts */
+.alert{padding:12px 16px;border-radius:8px;margin-bottom:14px;font-size:13px}
+.alert ul{margin:6px 0 0 16px}
+.alert-warn{background:#fef3c7;border:1px solid #fcd34d;color:#92400e}
+.alert-crit{background:#fee2e2;border:1px solid #fca5a5;color:#991b1b}
+.alert-info{background:#dbeafe;border:1px solid #93c5fd;color:#1e40af}
+.alert-demo{background:#fffbeb;border:2px dashed #f59e0b;color:#92400e;padding:14px 18px}
+
+/* Table */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 13px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:#f8fafc;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 13px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+.td-item{font-weight:500}
+.td-muted{color:var(--muted);font-size:12px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 15px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:#1e3a8a}
+.btn-secondary{background:#f1f5f9;color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:#e2e8f0}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:hover{background:#047857}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-warn{background:var(--warning);color:#fff}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Forms */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{margin-bottom:14px}
+label{display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:var(--muted)}
+input,select,textarea{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:7px;font-size:13px;color:var(--text);background:#fff;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary-light);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+textarea{resize:vertical;min-height:70px}
+.search-wrap{position:relative}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.search-wrap input{padding-left:34px}
+
+/* Filter row */
+.frow{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.frow select{width:auto}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
+.modal{background:#fff;border-radius:14px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-hdr{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:1}
+.modal-hdr h3{font-size:16px;font-weight:600}
+.modal-body{padding:22px}
+.modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:#fff}
+.close-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);padding:2px 6px;border-radius:5px}
+.close-btn:hover{background:#f1f5f9}
+
+/* Order item rows */
+.order-items-list{display:flex;flex-direction:column;gap:2px;max-height:350px;overflow-y:auto}
+.oi{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.oi:last-child{border-bottom:none}
+.oi-name{flex:1;font-size:13px}
+.oi-vendor{font-size:11px;color:var(--muted)}
+.oi-qty{width:70px}
+.oi-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 5px;border-radius:4px}
+.oi-remove:hover{color:var(--danger);background:#fee2e2}
+
+/* Cart counter */
+.cart-btn{position:relative}
+.cart-count{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border-radius:10px;font-size:10px;font-weight:700;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+
+/* Landing */
+.landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:40px;background:var(--bg)}
+.landing-top{text-align:center}
+.landing-logo{font-size:52px;margin-bottom:12px}
+.landing h1{font-size:26px;font-weight:700;color:var(--text);margin-bottom:8px}
+.landing p{color:var(--muted);max-width:380px;line-height:1.6}
+.dept-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;max-width:680px;width:100%}
+.dept-card{background:#fff;border:2px solid var(--border);border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;transition:all .2s;font-weight:500}
+.dept-card:hover{border-color:var(--primary);color:var(--primary);transform:translateY(-3px);box-shadow:0 6px 20px rgba(30,64,175,.12)}
+.dept-card .icon{font-size:28px;margin-bottom:8px}
+.dept-card .name{font-size:13px}
+.admin-link{color:var(--muted);font-size:13px;text-decoration:underline;cursor:pointer}
+.admin-link:hover{color:var(--primary)}
+
+/* Admin login */
+.login-box{background:#fff;border-radius:14px;padding:36px;max-width:360px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.1)}
+.login-box h2{font-size:20px;font-weight:700;margin-bottom:6px;text-align:center}
+.login-box p{color:var(--muted);text-align:center;margin-bottom:24px;font-size:13px}
+
+/* Chips */
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--muted);transition:all .15s}
+.chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* Toast */
+#toasts{position:fixed;bottom:22px;right:22px;display:flex;flex-direction:column;gap:8px;z-index:9999}
+.toast{background:#1e293b;color:#fff;padding:11px 18px;border-radius:8px;font-size:13px;min-width:200px;box-shadow:0 4px 14px rgba(0,0,0,.2);animation:toastIn .25s ease}
+.toast-ok{background:var(--success)}
+.toast-err{background:var(--danger)}
+@keyframes toastIn{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Loading */
+.loader{text-align:center;padding:50px;color:var(--muted)}
+.spinner{display:inline-block;width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Utils */
+.hidden{display:none!important}
+.mb-0{margin-bottom:0}
+.text-center{text-align:center}
+.text-muted{color:var(--muted)}
+.fw-bold{font-weight:600}
+.flex{display:flex;gap:10px;align-items:center}
+.flex-1{flex:1}
+.mt-4{margin-top:16px}
+.stock-bar-wrap{display:flex;align-items:center;gap:8px}
+.stock-bar{height:6px;border-radius:3px;background:#e2e8f0;overflow:hidden;width:80px;flex-shrink:0}
+.stock-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-state .icon{font-size:36px;margin-bottom:10px}
+.qty-num{width:65px;text-align:center}
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+@media(max-width:640px){.wrap{padding:12px}.form-row{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.hdr{padding:12px 16px}}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div id="toasts"></div>
+
+<!-- ============================================================
+     APPS SCRIPT CODE — Copy this into Google Apps Script
+     See SETUP INSTRUCTIONS in LG-Supply-Setup-Guide.html
+     ============================================================ -->
+<script type="text/template" id="apps-script">
+// ================================================================
+// LIQUID GRAPHICS — SUPPLY ORDERING SYSTEM — Google Apps Script
+// Instructions: Extensions > Apps Script > paste this > Deploy
+// ================================================================
+
+const SHEET_PRODUCTS  = 'Products';
+const SHEET_ORDERS    = 'Orders';
+const SHEET_DEPTS     = 'Departments';
+
+function doGet(e) {
+  const p = e.parameter;
+  let result;
+  try {
+    switch (p.action) {
+      case 'init':       result = initSheets(); break;
+      case 'catalog':    result = getCatalog(); break;
+      case 'inventory':  result = getInventory(p.dept); break;
+      case 'orders':     result = getOrders(p.dept, p.key); break;
+      case 'submitOrder':result = submitOrder(JSON.parse(p.data)); break;
+      case 'updateStock':result = updateStock(JSON.parse(p.data)); break;
+      case 'updateOrder':result = updateOrderStatus(JSON.parse(p.data), p.key); break;
+      case 'getDepts':   result = getDepts(); break;
+      default:           result = { error: 'Unknown action: ' + p.action };
+    }
+  } catch(err) {
+    result = { error: err.toString() };
+  }
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function initSheets() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  // Create Products sheet if needed
+  let ps = ss.getSheetByName(SHEET_PRODUCTS);
+  if (!ps) {
+    ps = ss.insertSheet(SHEET_PRODUCTS);
+    ps.getRange(1,1,1,10).setValues([[
+      'ID','Part#','Item','Vendor','Unit','Department','MinStock','CurrentStock','ReorderPoint','Notes'
+    ]]);
+    ps.getRange(1,1,1,10).setFontWeight('bold').setBackground('#1e40af').setFontColor('#ffffff');
+    ps.setFrozenRows(1);
+  }
+  // Create Orders sheet
+  let os = ss.getSheetByName(SHEET_ORDERS);
+  if (!os) {
+    os = ss.insertSheet(SHEET_ORDERS);
+    os.getRange(1,1,1,9).setValues([[
+      'OrderID','Timestamp','Department','Requester','Items','Notes','Status','AdminNotes','UpdatedAt'
+    ]]);
+    os.getRange(1,1,1,9).setFontWeight('bold').setBackground('#1e40af').setFontColor('#ffffff');
+    os.setFrozenRows(1);
+  }
+  // Create Departments sheet
+  let ds = ss.getSheetByName(SHEET_DEPTS);
+  if (!ds) {
+    ds = ss.insertSheet(SHEET_DEPTS);
+    ds.getRange(1,1,1,3).setValues([['Code','Name','Icon']]);
+    ds.getRange(1,1,1,3).setFontWeight('bold').setBackground('#1e40af').setFontColor('#ffffff');
+    ds.setFrozenRows(1);
+    ds.getRange(2,1,5,3).setValues([
+      ['INK','Ink Department','🎨'],['SCREEN','Screen Dept','🖼️'],
+      ['PACK','Packaging','📦'],['PROD','Production','⚙️'],['AR','Art & Embroidery','✂️']
+    ]);
+  }
+  return { ok: true, message: 'Sheets initialized! Now import your product catalog.' };
+}
+
+function getCatalog() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ps = ss.getSheetByName(SHEET_PRODUCTS);
+  if (!ps) return { error: 'Products sheet not found. Call ?action=init first.' };
+  const data = ps.getDataRange().getValues();
+  const headers = data[0];
+  const products = data.slice(1).filter(r => r[2]).map(r => {
+    const obj = {};
+    headers.forEach((h,i) => obj[h] = r[i]);
+    return obj;
+  });
+  return { products };
+}
+
+function getInventory(dept) {
+  const catalog = getCatalog();
+  if (catalog.error) return catalog;
+  const products = dept ? catalog.products.filter(p => p.Department === dept || !dept) : catalog.products;
+  return { products };
+}
+
+function getOrders(dept, key) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const os = ss.getSheetByName(SHEET_ORDERS);
+  if (!os) return { orders: [] };
+  const data = os.getDataRange().getValues();
+  const headers = data[0];
+  let orders = data.slice(1).filter(r => r[0]).map(r => {
+    const obj = {};
+    headers.forEach((h,i) => obj[h] = r[i]);
+    try { obj.Items = JSON.parse(obj.Items); } catch(e) {}
+    return obj;
+  });
+  if (dept && !key) orders = orders.filter(o => o.Department === dept);
+  orders.sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp));
+  return { orders };
+}
+
+function submitOrder(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const os = ss.getSheetByName(SHEET_ORDERS);
+  if (!os) return { error: 'Orders sheet not found' };
+  const id = 'ORD-' + Date.now();
+  const now = new Date().toISOString();
+  os.appendRow([id, now, data.dept, data.requester, JSON.stringify(data.items), data.notes||'', 'Pending','', now]);
+  return { ok: true, orderId: id };
+}
+
+function updateStock(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ps = ss.getSheetByName(SHEET_PRODUCTS);
+  if (!ps) return { error: 'Products sheet not found' };
+  const rows = ps.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === data.id) {
+      ps.getRange(i+1, 8).setValue(data.stock); // CurrentStock col
+      if (data.minStock !== undefined) ps.getRange(i+1, 7).setValue(data.minStock);
+      if (data.reorderPoint !== undefined) ps.getRange(i+1, 9).setValue(data.reorderPoint);
+      return { ok: true };
+    }
+  }
+  return { error: 'Product not found: ' + data.id };
+}
+
+function updateOrderStatus(data, key) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const os = ss.getSheetByName(SHEET_ORDERS);
+  if (!os) return { error: 'Orders sheet not found' };
+  const rows = os.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === data.orderId) {
+      os.getRange(i+1, 7).setValue(data.status);
+      if (data.adminNotes) os.getRange(i+1, 8).setValue(data.adminNotes);
+      os.getRange(i+1, 9).setValue(new Date().toISOString());
+      return { ok: true };
+    }
+  }
+  return { error: 'Order not found: ' + data.orderId };
+}
+
+function getDepts() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ds = ss.getSheetByName(SHEET_DEPTS);
+  if (!ds) return { depts: [] };
+  const data = ds.getDataRange().getValues();
+  const depts = data.slice(1).filter(r=>r[0]).map(r=>({code:r[0],name:r[1],icon:r[2]}));
+  return { depts };
+}
+</script>
+
+<script>
+// ================================================================
+// ⚙️  CONFIGURATION  — Edit after setting up Google Apps Script
+// ================================================================
+const CFG = {
+  // Paste your deployed Apps Script URL here:
+  API: 'YOUR_APPS_SCRIPT_URL_HERE',
+
+  COMPANY: 'Liquid Graphics',
+  // Admin password (also set in Apps Script if desired):
+  ADMIN_PASS: 'LGAdmin2024',
+
+  // Departments — must match Google Sheet Department codes
+  DEPTS: [
+    { id:'INK',    name:'Ink Department',       icon:'🎨' },
+    { id:'SCREEN', name:'Screen Department',    icon:'🖼️' },
+    { id:'PACK',   name:'Packaging & Shipping', icon:'📦' },
+    { id:'PROD',   name:'Production',           icon:'⚙️' },
+    { id:'AR',     name:'Art & Embroidery',     icon:'✂️' },
+  ],
+
+  // Stock thresholds (multiplier of minStock)
+  LOW_THRESH: 1.5,   // show "Low" warning if stock <= min * 1.5
+  CRIT_THRESH: 1.0,  // show "Critical" if stock <= min
+};
+
+// ================================================================
+// 📦  BUILT-IN PRODUCT CATALOG (from your spreadsheets)
+//     Loaded automatically into Google Sheets on first setup.
+// ================================================================
+const CATALOG = [
+  {id:'P001',part:'',item:'FINELINE TAGGING BULLET - 1"',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P002',part:'',item:'FINELINE TAGGING BULLET - 2"',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P003',part:'',item:'FINELINE TAGGING BULLET - 3"',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P004',part:'',item:'STANDARD TAGGING BULLET - 2"',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P005',part:'',item:'STANDARD TAGGING BULLET - 3"',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P006',part:'',item:'FINE TAGGING GUN',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P007',part:'',item:'STANDARD TAGGING GUN',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P008',part:'',item:'FINE TAGGING NEEDLES',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P009',part:'',item:'STANDARD TAGGING NEEDLES',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P010',part:'',item:'SEWING MACHINE NEEDLES',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P011',part:'10x16 POLYBAGS',item:'10" x 16" POLYBAGS (27 LANGUAGES)',vendor:'TEC/A&R',unit:'2,000/CASE',dept:'PACK',minStock:null,stock:null},
+  {id:'P012',part:'',item:'11" x 17" POLYBAGS (3 LANGUAGES)',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P013',part:'LRG0019',item:'13" x 18" POLYBAGS (27 LANGUAGES)',vendor:'TEC/A&R',unit:'2000/CASE',dept:'PACK',minStock:null,stock:null},
+  {id:'P014',part:'',item:'14" x 20" POLYBAGS (3 LANGUAGES)',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P015',part:'',item:'18" x 24" POLYBAGS (3 LANGUAGES)',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P016',part:'',item:'20" x 30" POLYBAGS (3 LANGUAGES)',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P017',part:'',item:'40" x 48" CARTON LINER',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P018',part:'',item:'TAPE GUN',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P019',part:'',item:'CLEAR TAPE - 2"',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P020',part:'',item:'CLEAR TAPE - 3"',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P021',part:'',item:'BLUE TAPE - 2"',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P022',part:'',item:'GREEN TAPE - 2"',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P023',part:'',item:'RED TAPE - 2"',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P024',part:'',item:'SECURITY TAPE',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P025',part:'',item:'MASKING TAPE',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P026',part:'LRG0090',item:'3" X 110 YD. - 2.6 MIL WHITE NATURAL RUBBER TAPE',vendor:'TEC/A&R',unit:'24/CASE',dept:'PACK',minStock:null,stock:null},
+  {id:'P027',part:'',item:'23-3/4" x 15-1/4" x 11-5/8" DOUBLE WALL BOX',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P028',part:'AC-23F15F11F',item:'23-3/4" x 15-1/4" x 11-5/8" SINGLE WALL BOX',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P029',part:'',item:'16" x 12" x 6" BOXES',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P030',part:'',item:'16" x 12" x 10" BOXES',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P031',part:'',item:'HOT TOPIC DOUBLE WALL 21-3/8" x 15-3/8" x 11-3/8"',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P032',part:'',item:'HOT TOPIC SINGLE WALL 21-3/8" x 15-3/8" x 11-3/8"',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P033',part:'',item:'HOT TOPIC SIZE STRIP - XS',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P034',part:'',item:'HOT TOPIC SIZE STRIP - S',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P035',part:'',item:'HOT TOPIC SIZE STRIP - M',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P036',part:'',item:'HOT TOPIC SIZE STRIP - L',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P037',part:'',item:'HOT TOPIC SIZE STRIP - XL',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P038',part:'',item:'HOT TOPIC SIZE STRIP - 2XL',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P039',part:'',item:'HOT TOPIC SIZE STRIP - 3XL',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P040',part:'',item:'15" NITRO PRE-STRETCH FILM - 3" CORE',vendor:'TEC/A&R',unit:'4 ROLLS/CASE',dept:'PACK',minStock:null,stock:null},
+  {id:'P041',part:'',item:'PARAGON MACHINE WRAP',vendor:'TEC/A&R',unit:'',dept:'PACK',minStock:null,stock:null},
+  {id:'P042',part:'THICK BOND',item:'PALLET ADHESIVE',vendor:'CCI',unit:'5 GAL./PAIL',dept:'PROD',minStock:null,stock:null},
+  {id:'P043',part:'TOP BOND MIST',item:'MIST AEROSOL PALLET ADHESIVE',vendor:'CCI',unit:'CASE OF 12',dept:'PROD',minStock:null,stock:null},
+  {id:'P044',part:'TOP BOND WEB',item:'WEB AEROSOL PALLET ADHESIVE',vendor:'CCI',unit:'CASE OF 12',dept:'PROD',minStock:null,stock:null},
+  {id:'P045',part:'BLAST',item:'PLASTISOL SCREEN OPENER',vendor:'CCI',unit:'CASE OF 12',dept:'PROD',minStock:null,stock:null},
+  {id:'P046',part:'AQUA BLAST',item:'WATER BASE SCREEN OPENER',vendor:'CCI',unit:'CASE OF 12',dept:'PROD',minStock:null,stock:null},
+  {id:'P047',part:'PPA-1',item:'PAD PRINT ADDITIVE 5 GAL',vendor:'CCI',unit:'5 GAL.',dept:'PROD',minStock:3,stock:0},
+  {id:'P048',part:'PPC-1',item:'PAD PRINT CLEANER 5 GAL',vendor:'CCI',unit:'5 GAL.',dept:'PROD',minStock:3,stock:2},
+  {id:'P049',part:'DB',item:'DISPOSIBLE BRUSH 24/CASE',vendor:'CCI',unit:'CASE/24',dept:'PROD',minStock:null,stock:null},
+  {id:'P050',part:'SR200',item:'PREMIUM SPOT REMOVER',vendor:'CCI',unit:'5 GAL',dept:'PROD',minStock:null,stock:null},
+  {id:'P051',part:'ICLW30',item:'ICC LIQUID WHITE PLASTISOL (54D-80C-IV)',vendor:'McLogan',unit:'DRUM',dept:'INK',minStock:null,stock:null},
+  {id:'P052',part:'SC741F5',item:'POLY WHITE 741',vendor:'McLogan',unit:'5 GAL',dept:'INK',minStock:null,stock:null},
+  {id:'P053',part:'PC7101105',item:'EPIC EQUAL WHITE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:2,stock:3},
+  {id:'P054',part:'PC7104505',item:'EPIC EQUAL MAROON',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:3},
+  {id:'P055',part:'PC7104705',item:'EPIC EQUAL MAGENTA',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:4},
+  {id:'P056',part:'PC7105705',item:'EPIC EQUAL VIOLET',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:4},
+  {id:'P057',part:'PC7106805',item:'EPIC EQUAL BLUE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:3},
+  {id:'P058',part:'PC7107005',item:'EPIC EQUAL GREEN',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:4},
+  {id:'P059',part:'PC7108705',item:'EPIC EQUAL YELLOW',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:2},
+  {id:'P060',part:'PC7109405',item:'EPIC EQUAL VELV BLACK',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:2},
+  {id:'P061',part:'PC7113005',item:'EPIC EQUAL BRT ORANGE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:2},
+  {id:'P062',part:'PC7116505',item:'EPIC EQUAL MARINE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:2},
+  {id:'P063',part:'PFX9888005',item:'EPIC PF FL PINK',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:2},
+  {id:'P064',part:'PFX9888405',item:'EPIC PF FL RED',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:5},
+  {id:'P065',part:'PFX9888505',item:'EPIC PF FL PURPLE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:3},
+  {id:'P066',part:'PFX9888605',item:'EPIC PF FL BLUE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:3},
+  {id:'P067',part:'PFX9888805',item:'EPIC PF FL YELLOW',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:3},
+  {id:'P068',part:'PFB14050M50',item:'EPIC NXT ECHO BASE (DRUM)',vendor:'Nazdar',unit:'DRUM',dept:'INK',minStock:1,stock:2},
+  {id:'P069',part:'PFX1900050',item:'PRX 19000 EPIC MATTE BLACK (DRUM)',vendor:'Nazdar',unit:'DRUM',dept:'INK',minStock:1,stock:0},
+  {id:'P070',part:'F020048979D6',item:'AMAZING BRIGHT TIGER WHITE',vendor:'Nazdar',unit:'DRUM',dept:'INK',minStock:2,stock:2},
+  {id:'P071',part:'K2200',item:'EPIC ATHLETIC POLY WHITE (30 gls)',vendor:'Nazdar',unit:'DRUM',dept:'INK',minStock:2,stock:4},
+  {id:'P072',part:'F020048042ES',item:'EPIC NUPUFF BASE (30 gls)',vendor:'Nazdar',unit:'DRUM',dept:'INK',minStock:1,stock:2},
+  {id:'P073',part:'PFX1002504',item:'EPIC VISCOSITY BUSTER',vendor:'Nazdar',unit:'1 GAL',dept:'INK',minStock:3,stock:3},
+  {id:'P074',part:'K2560',item:'NATURAL SUEDE BASE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:2,stock:12},
+  {id:'P075',part:'',item:'EPIC RIVAL SPORT LC DEFENDER',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:4,stock:1},
+  {id:'P076',part:'PFXSCP1065005',item:'EPIC SCULPTURE BASE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:2,stock:5},
+  {id:'P077',part:'PFX1000505',item:'EPIC STRETCH BASE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:1},
+  {id:'P078',part:'PFXFSB1034005',item:'EPIC FASHION SOFT BASE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:1},
+  {id:'P079',part:'PFXNB1039905',item:'EPIC NOVA BASE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:1},
+  {id:'P080',part:'K2922',item:'SOFT HAND CLEAR',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:2,stock:6},
+  {id:'P081',part:'PFXHDC10009',item:'HD CLEAR 2',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:2,stock:19},
+  {id:'P082',part:'85570 INFINITE',item:'ULTRA GOLD SHIMMER',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:null,stock:3},
+  {id:'P083',part:'15370 PFX',item:'EPIC SILVER SHIMMER',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:null,stock:6},
+  {id:'P084',part:'10988 PFXLS',item:'EPIC LIQUID SILVER',vendor:'Nazdar',unit:'1 GAL',dept:'INK',minStock:null,stock:2},
+  {id:'P085',part:'15340 PFX',item:'EPIC YELLOW SPARKLE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:null,stock:2},
+  {id:'P086',part:'89010 PFX',item:'EPIC GOLD GLITTER',vendor:'Nazdar',unit:'1 GAL',dept:'INK',minStock:null,stock:4},
+  {id:'P087',part:'15330 PFX',item:'EPIC SILVER GLITTER',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:null,stock:5},
+  {id:'P088',part:'15340 PFX',item:'EPIC YELLOW SPARKLE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:2},
+  {id:'P089',part:'80222',item:'INFINITE FX LIQUID MIRROR GOLD',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:4},
+  {id:'P090',part:'K2640',item:'INFINITE PROCESS BLACK',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:null,stock:5},
+  {id:'P091',part:'K2610',item:'INFINITE PROCESS CYAN',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:null,stock:3},
+  {id:'P092',part:'K2620',item:'INFINITE PROCESS MAGENTA',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:null,stock:1},
+  {id:'P093',part:'K2630',item:'INFINITE PROCESS YELLOW',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:null,stock:1},
+  {id:'P094',part:'ULTCC1500BX',item:'ULTIMATE CLEANUP CARDS',vendor:'Nazdar',unit:'1500/BOX',dept:'INK',minStock:null,stock:null},
+  {id:'P095',part:'PFX 10080',item:'EPIC FOIL RESIST ADDITIVE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:2},
+  {id:'P096',part:'G5544',item:'MAGNAPRINT BLING GOLD',vendor:'Nazdar',unit:'1 GAL',dept:'INK',minStock:2,stock:6},
+  {id:'P097',part:'',item:'MAGNAPRINT REFLECTIVE 3R BLACK',vendor:'Nazdar',unit:'1 GAL',dept:'INK',minStock:null,stock:13},
+  {id:'P098',part:'G6155',item:'MAGNAPRINT BLING SILVER',vendor:'Nazdar',unit:'1 GAL',dept:'INK',minStock:2,stock:6},
+  {id:'P099',part:'SY3818F1',item:'SENTRI CURABLE REDUCER 3818',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:2,stock:4},
+  {id:'P100',part:'SD7043F5',item:'GUARDIAN GRAY 7043',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:null,stock:null},
+  {id:'P101',part:'SY3809F5',item:'3809 FX GEL GLOSS CLEAR',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:2,stock:2},
+  {id:'P102',part:'SMG08F5',item:'GLOW IN THE DARK 108',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:1,stock:2},
+  {id:'P103',part:'',item:'2011 C DISCOVERY',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:5,stock:4},
+  {id:'P104',part:'SYC38F5',item:'PLASTISOL FOIL ADHESIVE 380',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:null,stock:1},
+  {id:'P105',part:'SML50F5',item:'SILVER GLITTER 150',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:null,stock:1},
+  {id:'P106',part:'IC50504',item:'IC505 OPTILUX REFLECTIVE INK',vendor:'Nazdar',unit:'1 GAL',dept:'INK',minStock:1,stock:3},
+  {id:'P107',part:'IC142LF05',item:'HIGH DENSITY BASE',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:2,stock:6},
+  {id:'P108',part:'SA901F1',item:'ALL PRO WHITE 901',vendor:'Nazdar',unit:'1 GAL',dept:'INK',minStock:1,stock:2},
+  {id:'P109',part:'SA904F1',item:'ALL PRO SCARLET 904',vendor:'Nazdar',unit:'1 GAL',dept:'INK',minStock:1,stock:1},
+  {id:'P110',part:'SA903F1',item:'ALL PRO GOLDEN YELLOW 903',vendor:'Nazdar',unit:'1 GAL',dept:'INK',minStock:1,stock:1},
+  {id:'P111',part:'',item:'CATALYST 900',vendor:'Nazdar',unit:'8 OZ.',dept:'INK',minStock:2,stock:2},
+  {id:'P112',part:'SY3810F1',item:'BLOWOUT BASE 3810',vendor:'Nazdar',unit:'5 GAL',dept:'INK',minStock:null,stock:1},
+  {id:'P113',part:'EAS-C2955G',item:'EASISOLV EMULSION REMOVER CA',vendor:'Nazdar',unit:'55 GAL',dept:'SCREEN',minStock:2,stock:1},
+  {id:'P114',part:'SPERFECT-55',item:'SCREEN PERFECT DEGREASER',vendor:'Nazdar',unit:'55 GAL',dept:'SCREEN',minStock:2,stock:6},
+  {id:'P115',part:'XP59-191',item:'SCREEN WASH & STAIN REMOVER',vendor:'Nazdar',unit:'55 GAL',dept:'SCREEN',minStock:null,stock:1},
+  {id:'P116',part:'SAATISCRH50200ZG1X5',item:'REMOVE HR3',vendor:'Nazdar',unit:'5 GAL.',dept:'SCREEN',minStock:null,stock:0},
+  {id:'P117',part:'EAS3555G',item:'EASISOLV LOW FOAM SCREEN WASH',vendor:'Nazdar',unit:'DRUM',dept:'SCREEN',minStock:3,stock:0},
+  {id:'P118',part:'KW21007444',item:'KIWO THICK COAT EMULSION',vendor:'Nazdar',unit:'1 GAL',dept:'SCREEN',minStock:2,stock:4},
+  {id:'P119',part:'KW21653510',item:'KIWO HARDENER K',vendor:'Nazdar',unit:'1 GAL',dept:'SCREEN',minStock:2,stock:4},
+  {id:'P120',part:'KW22786748',item:'KIWO POLYCOL LIGHTSCRIBE EMULSION',vendor:'Nazdar',unit:'5 GAL',dept:'SCREEN',minStock:2,stock:4},
+  {id:'P121',part:'30344',item:'TRIFECTA',vendor:'Nazdar',unit:'5 GAL',dept:'SCREEN',minStock:5,stock:10},
+  {id:'P122',part:'KW55202001',item:'KIWO XTS WAX 1KG',vendor:'Nazdar',unit:'CASE',dept:'SCREEN',minStock:4,stock:8},
+  {id:'P123',part:'MAT-RM0456-5G',item:'DISCHARGE AGENT',vendor:'Dynamic',unit:'5 GAL.',dept:'INK',minStock:2,stock:2},
+  {id:'P124',part:'',item:'FIXER WF',vendor:'Dynamic',unit:'5 GAL',dept:'INK',minStock:null,stock:2},
+  {id:'P125',part:'',item:'RETARDER WB',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:2,stock:4},
+  {id:'P126',part:'MAT-WB0056-5G',item:'FOIL ADHESIVE TFG 301',vendor:'Dynamic',unit:'5 GAL.',dept:'INK',minStock:2,stock:3},
+  {id:'P127',part:'',item:'GLOW ORANGE',vendor:'Dynamic',unit:'1 QT',dept:'INK',minStock:null,stock:2},
+  {id:'P128',part:'MAT-WG0084-Q',item:'GLOW YELLOW ECGG',vendor:'Dynamic',unit:'1 QT',dept:'INK',minStock:2,stock:5},
+  {id:'P129',part:'MAT-WG0106-Q',item:'GLOW PINK EC5B',vendor:'Dynamic',unit:'1 QT',dept:'INK',minStock:2,stock:3},
+  {id:'P130',part:'MAT-WG0087-Q',item:'GLOW ROSE',vendor:'Dynamic',unit:'1 QT',dept:'INK',minStock:2,stock:3},
+  {id:'P131',part:'MAT-WN0031-1G',item:'NEO YELLOW M3G',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:2,stock:2},
+  {id:'P132',part:'MAT-WN0054-1G',item:'NEO ORANGE MGD',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:2,stock:3},
+  {id:'P133',part:'MAT-WN0112-1G',item:'NEO RED MGD',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:1,stock:0},
+  {id:'P134',part:'MAT-WN0150-1G',item:'NEO PINK MB',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:1,stock:1},
+  {id:'P135',part:'MAT-WN0500-1G',item:'NEO YELLOW MFR',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:2,stock:3},
+  {id:'P136',part:'MAT-WN0502-1G',item:'NEO VIOLET MFB',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:1,stock:1},
+  {id:'P137',part:'MAT-WN0503-1G',item:'NEO BLUE MB',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:1,stock:1},
+  {id:'P138',part:'MAT-WN0504-1G',item:'NEO BLUE MG',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:1,stock:2},
+  {id:'P139',part:'',item:'NEO RED MFB',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:1,stock:1},
+  {id:'P140',part:'MAT-WN0505-1G',item:'NEO GREEN MB',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:1,stock:2},
+  {id:'P141',part:'MAT WN0507-1G',item:'NEO NAVY BLUE MB',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:1,stock:2},
+  {id:'P142',part:'MAT-WN0508-1G',item:'NEO BLACK MK',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:3,stock:4},
+  {id:'P143',part:'MAT-WN0571-1G',item:'REFLECTALITE SILVER POWDER',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:2,stock:8},
+  {id:'P144',part:'MAT-WS0462-5G',item:'CLEAR 301 C',vendor:'Dynamic',unit:'5 GAL.',dept:'INK',minStock:10,stock:9},
+  {id:'P145',part:'MAT-WS0463-5G',item:'MAT 301 M BASE',vendor:'Dynamic',unit:'5 GAL.',dept:'INK',minStock:5,stock:5},
+  {id:'P146',part:'MAT-WS0465-5G',item:'WHITE 301W5',vendor:'Dynamic',unit:'5 GAL.',dept:'INK',minStock:2,stock:2},
+  {id:'P147',part:'MAT-WS0504-1G',item:'GLITTER BASE 301',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:3,stock:20},
+  {id:'P148',part:'MAT-WS0508-1G',item:'PEARL BINDER 301',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:2,stock:2},
+  {id:'P149',part:'MAT-WS0533-1G',item:'UNDERBASE BLOCKER 301 (GRAY)',vendor:'Dynamic',unit:'5 GAL',dept:'INK',minStock:5,stock:11},
+  {id:'P150',part:'MAT-WB0111-55G',item:'HM DISCHARGE BASE',vendor:'Dynamic',unit:'DRUM',dept:'INK',minStock:1,stock:1},
+  {id:'P151',part:'MAT-WS0547-5G',item:'SILVER SHIMMER 620',vendor:'Dynamic',unit:'5 GAL.',dept:'INK',minStock:1,stock:4},
+  {id:'P152',part:'MAT-WS0549-1G',item:'GOLD SHIMMER 620',vendor:'Dynamic',unit:'5 GAL.',dept:'INK',minStock:1,stock:1},
+  {id:'P153',part:'MAT-WW0201-5G',item:'HM DISCHARGE - WHITE',vendor:'Dynamic',unit:'5 GAL.',dept:'INK',minStock:5,stock:2},
+  {id:'P154',part:'',item:'BRIGHT DISCHARGE BASE',vendor:'Dynamic',unit:'5 GAL.',dept:'INK',minStock:4,stock:4},
+  {id:'P155',part:'',item:'CRACK BASE HO',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:2,stock:0},
+  {id:'P156',part:'MAT-WW0202-5G',item:'BRIGHT DISCHARGE WHITE',vendor:'Dynamic',unit:'5 GAL.',dept:'INK',minStock:2,stock:2},
+  {id:'P157',part:'RUT-EA0001-Q',item:'FIBER BOND',vendor:'Dynamic',unit:'1 QT',dept:'INK',minStock:1,stock:2},
+  {id:'P158',part:'',item:'NTP DULLING PASTE/SUEDE',vendor:'Dynamic',unit:'1 GAL.',dept:'INK',minStock:1,stock:2},
+  {id:'P159',part:'RUT-ES0026-03',item:'THERMOLINE CLEAR',vendor:'Dynamic',unit:'5 GAL.',dept:'INK',minStock:1,stock:3},
+  {id:'P160',part:'SPR-945',item:'SILICONE SPRAY',vendor:'Dynamic',unit:'1/CAN',dept:'INK',minStock:null,stock:0},
+  {id:'P161',part:'',item:'NPT X-GLUE',vendor:'Dynamic',unit:'5 GAL',dept:'INK',minStock:null,stock:1},
+  {id:'P162',part:'RUT-LC0550-05',item:'NPT CHILL LC BARRIER GREY',vendor:'Dynamic',unit:'5 GAL',dept:'INK',minStock:3,stock:3},
+  {id:'P163',part:'PC752-9005',item:'WHITE PAD',vendor:'PrintColor',unit:'1 KG.',dept:'SCREEN',minStock:null,stock:null},
+  {id:'P164',part:'PC752-8005',item:'BLACK PAD',vendor:'PrintColor',unit:'1 KG.',dept:'SCREEN',minStock:null,stock:null},
+  {id:'P165',part:'GS-017-G',item:'GEN-SOLV FAST SPEED THINNER',vendor:'PrintColor',unit:'1 GAL.',dept:'SCREEN',minStock:null,stock:null},
+  {id:'P166',part:'NEO-SOLV 114',item:'UNIVERSAL INK CLEANER',vendor:'PrintColor',unit:'5 GAL.',dept:'SCREEN',minStock:null,stock:null},
+  {id:'P167',part:'LASERPRO 0 SERIES DT-LP2',item:'LASER PRO II CLICHES (127X247)',vendor:'PrintColor',unit:'50 PACK',dept:'SCREEN',minStock:null,stock:null},
+  {id:'P168',part:'PC700-HAD',item:'OUTDOOR HARDENER SERIES 700',vendor:'PrintColor',unit:'1 KG.',dept:'SCREEN',minStock:null,stock:null},
+  {id:'P169',part:'PULLOUT 2',item:'PULL OUT SPOT LIFTER',vendor:'D3',unit:'12/CASE',dept:'PROD',minStock:null,stock:null},
+  {id:'P170',part:'SL3',item:'SPOT LIFTER',vendor:'D3',unit:'12/CASE',dept:'PROD',minStock:null,stock:null},
+  {id:'P171',part:'',item:'FLOCK PAPER - BLACK',vendor:'D3',unit:'',dept:'PROD',minStock:null,stock:null},
+  {id:'P172',part:'',item:'FLOCK PAPER - WHITE',vendor:'D3',unit:'',dept:'PROD',minStock:null,stock:null},
+  {id:'P173',part:'',item:'FLOCK PAPER - AQUA',vendor:'D3',unit:'',dept:'PROD',minStock:null,stock:null},
+  {id:'P174',part:'',item:'FLOCK PAPER - RED',vendor:'D3',unit:'',dept:'PROD',minStock:null,stock:null},
+  {id:'P175',part:'',item:'FLOCK PAPER - ORANGE',vendor:'D3',unit:'',dept:'PROD',minStock:null,stock:null},
+  {id:'P176',part:'',item:'PLANTIMIGRATION BASE',vendor:'D3',unit:'37 GAL',dept:'PROD',minStock:null,stock:0},
+  {id:'P177',part:'',item:'PL POLY WHITE',vendor:'D3',unit:'40 GAL',dept:'PROD',minStock:null,stock:0},
+  {id:'P178',part:'MP 310',item:'BLACK EXTRA OPAQUE PAD INK',vendor:'Printex',unit:'',dept:'SCREEN',minStock:null,stock:null},
+  {id:'P179',part:'MP 320',item:'WHITE EXTRA OPAQUE PAD INK',vendor:'Printex',unit:'',dept:'SCREEN',minStock:null,stock:null},
+  {id:'P180',part:'MP 200 HARDENER',item:'MP 200 HARDENER 100 ML',vendor:'Printex',unit:'',dept:'SCREEN',minStock:null,stock:null},
+  {id:'P181',part:'RL001-35',item:'LARGE ROUND PAD 35 DUROMETER',vendor:'Printex',unit:'',dept:'SCREEN',minStock:null,stock:null},
+  {id:'P182',part:'RL001-S',item:'LARGE ROUND PAD SOFT 45 DUROMETER',vendor:'Printex',unit:'',dept:'SCREEN',minStock:null,stock:null},
+  {id:'P183',part:'G2-73-U-5x7.7-2H',item:'GOLD WATER WASH POLYMER PLATES',vendor:'Printex',unit:'',dept:'SCREEN',minStock:null,stock:null},
+  {id:'P184',part:'LRG0042',item:'18" PALLET TAPE',vendor:'TEC/A&R',unit:'',dept:'PROD',minStock:null,stock:null},
+  {id:'P185',part:'INK0046',item:'24" PALLET TAPE',vendor:'TEC/A&R',unit:'',dept:'PROD',minStock:null,stock:null},
+  {id:'P186',part:'TAP-MASK0206',item:'2" MASKING TAPE',vendor:'TEC/A&R',unit:'24/CASE',dept:'PROD',minStock:null,stock:null},
+  {id:'P187',part:'TAP-03110#500W',item:'3" WHITE SCREEN BLOCK TAPE',vendor:'TEC/A&R',unit:'24/CASE',dept:'PROD',minStock:null,stock:null},
+  {id:'P188',part:'',item:'3" CLEAR TAPE',vendor:'TEC/A&R',unit:'24/CASE',dept:'PROD',minStock:null,stock:null},
+  {id:'P189',part:'Glove-nitrileblk-L',item:'BLACK NITRILE GLOVES LARGE',vendor:'TEC/A&R',unit:'CASE',dept:'PROD',minStock:null,stock:null},
+  {id:'P190',part:'LRG0036',item:'COTTON TIPPED APPLICATORS',vendor:'TEC/A&R',unit:'1,000/CASE',dept:'PROD',minStock:null,stock:null},
+  {id:'P191',part:'LRG0043A',item:'SUNNY CARE DISPOSIBLE FOOD SERVICE GLOVES - LARGE',vendor:'TEC/A&R',unit:'10,000/CASE',dept:'PROD',minStock:null,stock:null},
+  {id:'P192',part:'INX0052',item:'EAR LOOP FACE MASKS BLUE',vendor:'TEC/A&R',unit:'1,000/BOX',dept:'PROD',minStock:null,stock:null},
+  {id:'P193',part:'LRG0034',item:'SAFETY GLASSES CLEAR',vendor:'TEC/A&R',unit:'12/BOX',dept:'PROD',minStock:null,stock:null},
+  {id:'P194',part:'S-19714-L',item:'CHEMICAL RESISTANT GREEN GLOVES - EXTENDED CUFF',vendor:'Uline',unit:'1 DOZEN',dept:'PACK',minStock:null,stock:null},
+  {id:'P195',part:'S-11489T',item:'#33 RUBBER BANDS - 3 1/2" x 1/8" TAN',vendor:'Uline',unit:'600/BOX',dept:'PACK',minStock:null,stock:null},
+  {id:'P196',part:'S-19467B',item:'CYLINDER SQUEEZABLE BOTTLES - 32oz',vendor:'Uline',unit:'112/CASE',dept:'PACK',minStock:null,stock:null},
+  {id:'P197',part:'S-17110C',item:'DELUXE ICE WRAPAROUNDS - CLEAR',vendor:'Uline',unit:'DZN/CARTON',dept:'PACK',minStock:null,stock:null},
+  {id:'P198',part:'H-595',item:'ECONOMY CUTTER',vendor:'Uline',unit:'DZN/CARTON',dept:'PACK',minStock:null,stock:null},
+  {id:'P199',part:'H-494XX',item:'BACK SUPPORT BELT WITH SUSPENDER - 2XL',vendor:'Uline',unit:'INDIVIDUAL',dept:'PACK',minStock:null,stock:null},
+  {id:'P200',part:'H-494L',item:'BACK SUPPORT BELT WITH SUSPENDER - LARGE',vendor:'Uline',unit:'INDIVIDUAL',dept:'PACK',minStock:null,stock:null},
+  {id:'P201',part:'H-494M',item:'BACK SUPPORT BELT WITH SUSPENDER - MEDIUM',vendor:'Uline',unit:'INDIVIDUAL',dept:'PACK',minStock:null,stock:null},
+  {id:'P202',part:'H-494S',item:'BACK SUPPORT BELT WITH SUSPENDER - SMALL',vendor:'Uline',unit:'INDIVIDUAL',dept:'PACK',minStock:null,stock:null},
+  {id:'P203',part:'H-494X',item:'BACK SUPPORT BELT WITH SUSPENDER - XL',vendor:'Uline',unit:'INDIVIDUAL',dept:'PACK',minStock:null,stock:null},
+  {id:'P204',part:'S-14316L',item:'POLYURETHANE COATED GLOVES - WHITE, LARGE',vendor:'Uline',unit:'12 PAIRS/CARTON',dept:'PACK',minStock:null,stock:null},
+  {id:'P205',part:'S-14316M',item:'POLYURETHANE COATED GLOVES - WHITE, MED',vendor:'Uline',unit:'12 PAIRS/CARTON',dept:'PACK',minStock:null,stock:null},
+  {id:'P206',part:'S-14316S',item:'POLYURETHANE COATED GLOVES - WHITE, SMALL',vendor:'Uline',unit:'12 PAIRS/CARTON',dept:'PACK',minStock:null,stock:null},
+  {id:'P207',part:'H-595B',item:'REPLACEMENT BLADES FOR H-595 CUTTER',vendor:'Uline',unit:'100/BOX',dept:'PACK',minStock:null,stock:null},
+  {id:'P208',part:'S-6222',item:'PACKING LIST ENVELOPES - CLEAR 5.5"x4.5"',vendor:'Uline',unit:'1,000/CARTON',dept:'PACK',minStock:null,stock:null},
+  {id:'P209',part:'S-2980',item:'PACKING LIST ENVELOPES - CLEAR 7"x6"',vendor:'Uline',unit:'1,000/CARTON',dept:'PACK',minStock:null,stock:null},
+  {id:'P210',part:'H-855BL',item:'UNIVERSAL WAIST BACK SUPPORT BELT',vendor:'Uline',unit:'INDIVIDUAL',dept:'PACK',minStock:null,stock:null},
+];
+
+// ================================================================
+// 🗄️  APP STATE
+// ================================================================
+const S = {
+  view: 'loading',   // loading | landing | dept | admin
+  dept: null,        // current dept id
+  tab: 'inventory',  // active tab
+  catalog: [],       // all products (from API or CATALOG)
+  orders: [],        // orders for current context
+  cart: [],          // items being ordered (array of {product, qty})
+  isDemo: false,     // true if API not configured
+  adminAuth: false,
+};
+
+// ================================================================
+// 🌐  API LAYER
+// ================================================================
+const isDemo = () => !CFG.API || CFG.API.includes('YOUR_APPS');
+
+function lsGet(key, def) {
+  try { return JSON.parse(localStorage.getItem('lg_'+key)) ?? def; } catch { return def; }
+}
+function lsSet(key, val) { localStorage.setItem('lg_'+key, JSON.stringify(val)); }
+
+async function apiCall(params) {
+  if (isDemo()) return null; // handled by demo logic
+  const url = new URL(CFG.API);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v)));
+  try {
+    const r = await fetch(url.toString(), {redirect:'follow'});
+    return await r.json();
+  } catch(e) {
+    console.error('API error:', e);
+    return {error: e.message};
+  }
+}
+
+async function loadCatalog() {
+  if (isDemo()) {
+    // Use built-in catalog + localStorage overrides
+    const overrides = lsGet('catalog_overrides', {});
+    return CATALOG.map(p => ({...p, ...(overrides[p.id]||{})}));
+  }
+  const r = await apiCall({action:'catalog'});
+  if (r?.products?.length) {
+    return r.products.map(p => ({
+      id: p['ID'] || p.id,
+      part: p['Part#'] || p.part || '',
+      item: p['Item'] || p.item || '',
+      vendor: p['Vendor'] || p.vendor || '',
+      unit: p['Unit'] || p.unit || '',
+      dept: p['Department'] || p.dept || '',
+      minStock: p['MinStock'] ?? p.minStock ?? null,
+      stock: p['CurrentStock'] ?? p.stock ?? null,
+    }));
+  }
+  return CATALOG; // fallback
+}
+
+async function loadOrders(dept) {
+  if (isDemo()) return lsGet('orders', []).filter(o => !dept || o.dept === dept);
+  const r = await apiCall({action:'orders', dept: dept||'', key: S.adminAuth ? CFG.ADMIN_PASS : ''});
+  return r?.orders?.map(o => ({
+    id: o.OrderID || o.id,
+    ts: o.Timestamp || o.ts,
+    dept: o.Department || o.dept,
+    requester: o.Requester || o.requester,
+    items: Array.isArray(o.Items) ? o.Items : o.items || [],
+    notes: o.Notes || o.notes || '',
+    status: o.Status || o.status || 'Pending',
+    adminNotes: o.AdminNotes || o.adminNotes || '',
+  })) || [];
+}
+
+async function submitOrderApi(data) {
+  if (isDemo()) {
+    const orders = lsGet('orders', []);
+    const order = {id:'ORD-'+Date.now(), ts:new Date().toISOString(), ...data, status:'Pending', adminNotes:''};
+    orders.unshift(order);
+    lsSet('orders', orders);
+    return {ok:true, orderId:order.id};
+  }
+  return await apiCall({action:'submitOrder', data});
+}
+
+async function updateStockApi(id, stock, minStock, reorderPoint) {
+  if (isDemo()) {
+    const overrides = lsGet('catalog_overrides', {});
+    overrides[id] = {...(overrides[id]||{}), stock, minStock, reorderPoint};
+    lsSet('catalog_overrides', overrides);
+    return {ok:true};
+  }
+  return await apiCall({action:'updateStock', data:{id, stock, minStock, reorderPoint}});
+}
+
+async function updateOrderStatusApi(orderId, status, adminNotes) {
+  if (isDemo()) {
+    const orders = lsGet('orders', []);
+    const idx = orders.findIndex(o => o.id === orderId);
+    if (idx >= 0) { orders[idx].status = status; orders[idx].adminNotes = adminNotes||''; lsSet('orders', orders); }
+    return {ok:true};
+  }
+  return await apiCall({action:'updateOrder', data:{orderId, status, adminNotes}, key:CFG.ADMIN_PASS});
+}
+
+// ================================================================
+// 🏷️  HELPERS
+// ================================================================
+function stockStatus(p) {
+  if (p.stock === null || p.stock === undefined) return null;
+  const s = Number(p.stock), m = Number(p.minStock);
+  if (!m) { if (s === 0) return 'critical'; return 'ok'; }
+  if (s <= m * CFG.CRIT_THRESH) return 'critical';
+  if (s <= m * CFG.LOW_THRESH)  return 'low';
+  return 'ok';
+}
+
+function stockBadge(p) {
+  const st = stockStatus(p);
+  if (!st) return '<span class="badge b-ok">—</span>';
+  if (st==='critical') return '<span class="badge b-crit">🔴 Critical</span>';
+  if (st==='low')      return '<span class="badge b-low">🟡 Low</span>';
+  return '<span class="badge b-ok">🟢 OK</span>';
+}
+
+function orderBadge(status) {
+  const map = {Pending:'b-pending',Ordered:'b-ordered',Fulfilled:'b-fulfilled',Cancelled:'b-cancelled'};
+  return `<span class="badge ${map[status]||'b-pending'}">${status}</span>`;
+}
+
+function fmtDate(ts) {
+  if (!ts) return '—';
+  try { return new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}); }
+  catch{ return ts; }
+}
+
+function getDeptName(id) {
+  return CFG.DEPTS.find(d=>d.id===id)?.name || id;
+}
+
+function toast(msg, type='') {
+  const c = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' toast-'+type : '');
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => el.style.opacity='0', 2700);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function setHTML(html) { document.getElementById('app').innerHTML = html; }
+
+// ================================================================
+// 🖼️  ROUTER / INIT
+// ================================================================
+async function init() {
+  const params = new URLSearchParams(location.search);
+  const dept = (params.get('dept')||'').toUpperCase();
+  const view = params.get('view')||'';
+
+  S.isDemo = isDemo();
+  S.catalog = await loadCatalog();
+
+  if (view === 'admin') { renderAdminLogin(); return; }
+  if (dept && CFG.DEPTS.find(d=>d.id===dept)) { S.dept=dept; await renderDept(); return; }
+  renderLanding();
+}
+
+// ================================================================
+// 🏠  LANDING
+// ================================================================
+function renderLanding() {
+  setHTML(`
+    <div class="landing">
+      ${S.isDemo?`<div class="alert alert-demo" style="max-width:600px;width:100%">
+        ⚠️ <strong>Demo Mode</strong> — Data is stored in your browser only.
+        <a href="?view=admin">Set up Google Sheets</a> to share data across departments.
+      </div>`:''}
+      <div class="landing-top">
+        <div class="landing-logo">🖨️</div>
+        <h1>${CFG.COMPANY} Supply Ordering</h1>
+        <p>Select your department to view inventory and submit order requests.</p>
+      </div>
+      <div class="dept-grid">
+        ${CFG.DEPTS.map(d=>`
+          <div class="dept-card" onclick="location.href='?dept=${d.id}'">
+            <div class="icon">${d.icon}</div>
+            <div class="name">${d.name}</div>
+          </div>`).join('')}
+      </div>
+      <span class="admin-link" onclick="location.href='?view=admin'">🔑 Admin / Purchasing</span>
+    </div>
+  `);
+}
+
+// ================================================================
+// 🏢  DEPARTMENT VIEW
+// ================================================================
+async function renderDept() {
+  const dept = CFG.DEPTS.find(d=>d.id===S.dept);
+  const deptProds = S.catalog.filter(p => p.dept === S.dept);
+  S.orders = await loadOrders(S.dept);
+
+  const critItems = deptProds.filter(p=>stockStatus(p)==='critical');
+  const lowItems  = deptProds.filter(p=>stockStatus(p)==='low');
+
+  setHTML(`
+    <div class="hdr">
+      <div class="hdr-logo">
+        ${dept.icon} ${CFG.COMPANY}
+        <span>Supply Ordering</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="hdr-badge">${dept.name}</span>
+        <button class="btn btn-secondary btn-sm cart-btn" onclick="openOrderModal()" id="cart-btn">
+          🛒 Request Order
+          <span class="cart-count hidden" id="cart-count">0</span>
+        </button>
+      </div>
+    </div>
+    <div class="wrap">
+      ${S.isDemo?`<div class="alert alert-demo">⚠️ <strong>Demo Mode</strong> — Orders saved in browser only. Configure Google Sheets to persist data.</div>`:''}
+      ${critItems.length?`<div class="alert alert-crit">
+        🔴 <strong>Critical — Order Immediately:</strong>
+        <ul>${critItems.map(p=>`<li>${p.item} (${p.vendor}) — Stock: ${p.stock??'?'}, Min: ${p.minStock}</li>`).join('')}</ul>
+      </div>`:''}
+      ${lowItems.length?`<div class="alert alert-warn">
+        🟡 <strong>Running Low — Order Soon:</strong>
+        <ul>${lowItems.map(p=>`<li>${p.item} — Stock: ${p.stock}, Min: ${p.minStock}</li>`).join('')}</ul>
+      </div>`:''}
+
+      <div class="tabs">
+        <div class="tab ${S.tab==='inventory'?'active':''}" onclick="switchTab('inventory')">📦 My Inventory</div>
+        <div class="tab ${S.tab==='orders'?'active':''}" onclick="switchTab('orders')">📋 My Orders</div>
+        <div class="tab ${S.tab==='catalog'?'active':''}" onclick="switchTab('catalog')">🗂 Full Catalog</div>
+      </div>
+
+      <div id="tab-content"></div>
+    </div>
+  `);
+
+  renderTabContent();
+}
+
+function switchTab(tab) {
+  S.tab = tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  const tabs = ['inventory','orders','catalog'];
+  document.querySelectorAll('.tab')[tabs.indexOf(tab)]?.classList.add('active');
+  renderTabContent();
+}
+
+function renderTabContent() {
+  const el = document.getElementById('tab-content');
+  if (!el) return;
+  if (S.tab==='inventory') el.innerHTML = renderInventoryTab();
+  else if (S.tab==='orders') el.innerHTML = renderOrdersTab();
+  else el.innerHTML = renderCatalogTab();
+}
+
+function renderInventoryTab() {
+  const prods = S.catalog.filter(p=>p.dept===S.dept && p.stock!==null);
+  const vendors = [...new Set(prods.map(p=>p.vendor))].sort();
+  if (!prods.length) return `<div class="empty-state"><div class="icon">📦</div><p>No inventory data yet. An admin needs to set stock levels.</p></div>`;
+  return `
+    <div class="card">
+      <div class="card-hdr">
+        <h3>Inventory — ${getDeptName(S.dept)}</h3>
+        <div class="frow mb-0" style="margin:0">
+          <div class="search-wrap">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search items…" oninput="filterInv(this.value)" id="inv-search">
+          </div>
+          <select onchange="filterInvVendor(this.value)" id="inv-vendor">
+            <option value="">All Vendors</option>
+            ${vendors.map(v=>`<option>${v}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table id="inv-table">
+          <thead><tr>
+            <th>Status</th><th>Item</th><th>Part #</th><th>Vendor</th><th>Unit</th>
+            <th style="text-align:center">Stock</th><th style="text-align:center">Min</th>
+            <th></th>
+          </tr></thead>
+          <tbody>
+            ${prods.map(p=>invRow(p)).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function invRow(p, showDept) {
+  const st = stockStatus(p);
+  const bar = p.minStock ? `<div class="stock-bar-wrap">
+    <span style="min-width:24px;text-align:right">${p.stock??'?'}</span>
+    <div class="stock-bar"><div class="stock-bar-fill" style="width:${Math.min(100,((p.stock||0)/(p.minStock*2))*100)}%;background:${st==='critical'?'#dc2626':st==='low'?'#d97706':'#059669'}"></div></div>
+  </div>` : `<span>${p.stock??'—'}</span>`;
+  return `<tr data-id="${p.id}" data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}">
+    <td>${stockBadge(p)}</td>
+    <td class="td-item">${p.item}${showDept?`<div class="td-muted">${getDeptName(p.dept)}</div>`:''}</td>
+    <td class="td-muted">${p.part||'—'}</td>
+    <td>${p.vendor}</td>
+    <td class="td-muted">${p.unit||'—'}</td>
+    <td style="text-align:center">${bar}</td>
+    <td style="text-align:center" class="td-muted">${p.minStock??'—'}</td>
+    <td><button class="btn btn-sm ${st==='critical'?'btn-danger':st==='low'?'btn-warn':'btn-secondary'}" onclick="addToCart('${p.id}')">+ Request</button></td>
+  </tr>`;
+}
+
+function filterInv(q) {
+  const rows = document.querySelectorAll('#inv-table tbody tr');
+  rows.forEach(r => {
+    const v = document.getElementById('inv-vendor')?.value.toLowerCase()||'';
+    const match = (!q || r.dataset.item?.includes(q.toLowerCase())) && (!v || r.dataset.vendor?.includes(v));
+    r.style.display = match ? '' : 'none';
+  });
+}
+function filterInvVendor(v) { filterInv(document.getElementById('inv-search')?.value||''); }
+
+function renderOrdersTab() {
+  const orders = S.orders;
+  if (!orders.length) return `<div class="empty-state"><div class="icon">📋</div><p>No order requests yet. Use the Request Order button to submit one.</p></div>`;
+  return `
+    <div class="card">
+      <div class="card-hdr"><h3>My Order History</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Requester</th><th>Items</th><th>Notes</th><th>Status</th><th>Admin Notes</th></tr></thead>
+          <tbody>
+            ${orders.map(o=>`<tr>
+              <td class="td-muted" style="white-space:nowrap">${fmtDate(o.ts||o.Timestamp)}</td>
+              <td>${o.requester||o.Requester||'—'}</td>
+              <td>${(o.items||o.Items||[]).map(i=>`<div class="td-item" style="font-size:12px">${i.item} <span class="td-muted">×${i.qty}</span></div>`).join('')}</td>
+              <td class="td-muted">${o.notes||o.Notes||'—'}</td>
+              <td>${orderBadge(o.status||o.Status||'Pending')}</td>
+              <td class="td-muted">${o.adminNotes||o.AdminNotes||'—'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function renderCatalogTab() {
+  const vendors = [...new Set(S.catalog.map(p=>p.vendor))].sort();
+  return `
+    <div class="card">
+      <div class="card-hdr">
+        <h3>Full Product Catalog</h3>
+        <div class="frow mb-0" style="margin:0">
+          <div class="search-wrap">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search…" oninput="filterCat(this.value)" id="cat-search">
+          </div>
+          <select onchange="filterCatVendor(this.value)" id="cat-vendor">
+            <option value="">All Vendors</option>
+            ${vendors.map(v=>`<option>${v}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table id="cat-table">
+          <thead><tr><th>Item</th><th>Part #</th><th>Vendor</th><th>Unit</th><th></th></tr></thead>
+          <tbody>
+            ${S.catalog.map(p=>`<tr data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}">
+              <td class="td-item">${p.item}</td>
+              <td class="td-muted">${p.part||'—'}</td>
+              <td>${p.vendor}</td>
+              <td class="td-muted">${p.unit||'—'}</td>
+              <td><button class="btn btn-secondary btn-sm" onclick="addToCart('${p.id}')">+ Add</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+function filterCat(q) {
+  const rows = document.querySelectorAll('#cat-table tbody tr');
+  const v = document.getElementById('cat-vendor')?.value.toLowerCase()||'';
+  rows.forEach(r => {
+    const match = (!q||r.dataset.item?.includes(q.toLowerCase())) && (!v||r.dataset.vendor?.includes(v));
+    r.style.display = match?'':'none';
+  });
+}
+function filterCatVendor() { filterCat(document.getElementById('cat-search')?.value||''); }
+
+// ================================================================
+// 🛒  ORDER MODAL (Department)
+// ================================================================
+function addToCart(id) {
+  const prod = S.catalog.find(p=>p.id===id);
+  if (!prod) return;
+  const existing = S.cart.find(c=>c.product.id===id);
+  if (existing) { toast(`${prod.item} already in cart`,''); return; }
+  S.cart.push({product:prod, qty:1});
+  updateCartBadge();
+  toast(`Added: ${prod.item}`, 'ok');
+}
+
+function updateCartBadge() {
+  const el = document.getElementById('cart-count');
+  if (el) { el.textContent = S.cart.length; el.classList.toggle('hidden', S.cart.length===0); }
+}
+
+function openOrderModal() {
+  const existing = document.getElementById('order-modal');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className='overlay';
+  overlay.id='order-modal';
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-hdr">
+        <h3>🛒 Submit Order Request</h3>
+        <button class="close-btn" onclick="document.getElementById('order-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Your Name *</label>
+          <input type="text" id="req-name" placeholder="Enter your name">
+        </div>
+        <div class="form-group">
+          <label>Items to Order</label>
+          <div class="order-items-list" id="cart-items">
+            ${S.cart.length ? S.cart.map(c=>cartItemRow(c)).join('') : '<p class="td-muted">No items added. Close and click "+ Request" or "+ Add" on any item.</p>'}
+          </div>
+          <button class="btn btn-secondary btn-sm mt-4" onclick="openAddItemModal()">+ Add Item</button>
+        </div>
+        <div class="form-group">
+          <label>Notes / Special Instructions</label>
+          <textarea id="req-notes" placeholder="Urgency, quantities context, substitutes OK, etc."></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" onclick="document.getElementById('order-modal').remove()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitOrder()">📤 Submit Request</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function cartItemRow(c) {
+  return `<div class="oi" id="cart-row-${c.product.id}">
+    <div class="oi-name">${c.product.item}<div class="td-muted">${c.product.vendor} · ${c.product.unit||'—'}</div></div>
+    <input class="oi-qty" type="number" min="1" value="${c.qty}" onchange="updateCartQty('${c.product.id}',this.value)" placeholder="Qty">
+    <button class="oi-remove" onclick="removeFromCart('${c.product.id}')">×</button>
+  </div>`;
+}
+
+function updateCartQty(id, qty) {
+  const item = S.cart.find(c=>c.product.id===id);
+  if (item) item.qty = Math.max(1, parseInt(qty)||1);
+}
+
+function removeFromCart(id) {
+  S.cart = S.cart.filter(c=>c.product.id!==id);
+  const row = document.getElementById('cart-row-'+id);
+  if (row) row.remove();
+  updateCartBadge();
+}
+
+function openAddItemModal() {
+  const vendors = [...new Set(S.catalog.map(p=>p.vendor))].sort();
+  const overlay2 = document.createElement('div');
+  overlay2.className='overlay';
+  overlay2.id='add-item-modal';
+  overlay2.style.zIndex='1100';
+  overlay2.innerHTML=`
+    <div class="modal">
+      <div class="modal-hdr">
+        <h3>Search & Add Items</h3>
+        <button class="close-btn" onclick="document.getElementById('add-item-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="frow">
+          <div class="search-wrap flex-1">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="add-search" placeholder="Search items…" oninput="filterAddItems(this.value)" autofocus>
+          </div>
+          <select id="add-vendor" onchange="filterAddItems(document.getElementById('add-search').value)">
+            <option value="">All Vendors</option>
+            ${vendors.map(v=>`<option>${v}</option>`).join('')}
+          </select>
+        </div>
+        <div class="tbl-wrap" style="max-height:380px;overflow-y:auto">
+          <table id="add-table">
+            <thead><tr><th>Item</th><th>Vendor</th><th>Unit</th><th></th></tr></thead>
+            <tbody>
+              ${S.catalog.map(p=>`<tr data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}">
+                <td>${p.item}${p.part?`<div class="td-muted">${p.part}</div>`:''}</td>
+                <td>${p.vendor}</td>
+                <td class="td-muted">${p.unit||'—'}</td>
+                <td><button class="btn btn-primary btn-sm" onclick="addToCartFromModal('${p.id}')">Add</button></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" onclick="document.getElementById('add-item-modal').remove()">Done</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay2);
+}
+
+function filterAddItems(q) {
+  const v = document.getElementById('add-vendor')?.value.toLowerCase()||'';
+  document.querySelectorAll('#add-table tbody tr').forEach(r=>{
+    const match = (!q||r.dataset.item?.includes(q.toLowerCase()))&&(!v||r.dataset.vendor?.includes(v));
+    r.style.display=match?'':'none';
+  });
+}
+
+function addToCartFromModal(id) {
+  addToCart(id);
+  // Refresh cart items panel
+  const cartEl = document.getElementById('cart-items');
+  if (cartEl) cartEl.innerHTML = S.cart.length ? S.cart.map(c=>cartItemRow(c)).join('') : '<p class="td-muted">No items.</p>';
+  updateCartBadge();
+}
+
+async function submitOrder() {
+  const name = document.getElementById('req-name')?.value.trim();
+  const notes = document.getElementById('req-notes')?.value.trim();
+  if (!name) { toast('Please enter your name','err'); return; }
+  if (!S.cart.length) { toast('Add at least one item','err'); return; }
+
+  const items = S.cart.map(c=>({id:c.product.id, item:c.product.item, vendor:c.product.vendor, unit:c.product.unit, qty:c.qty}));
+  const r = await submitOrderApi({dept:S.dept, requester:name, items, notes});
+  if (r?.ok || r) {
+    toast('Order request submitted! ✅', 'ok');
+    S.cart = [];
+    updateCartBadge();
+    document.getElementById('order-modal')?.remove();
+    S.orders = await loadOrders(S.dept);
+    if (S.tab==='orders') renderTabContent();
+  } else {
+    toast('Error submitting order. Try again.','err');
+  }
+}
+
+// ================================================================
+// 🔐  ADMIN LOGIN
+// ================================================================
+function renderAdminLogin() {
+  setHTML(`
+    <div class="landing">
+      <div class="login-box">
+        <div style="font-size:36px;text-align:center;margin-bottom:12px">🔑</div>
+        <h2>Admin Access</h2>
+        <p>${CFG.COMPANY} Purchasing Dashboard</p>
+        <div class="form-group">
+          <label>Admin Password</label>
+          <input type="password" id="admin-pw" placeholder="Enter password" onkeydown="if(event.key==='Enter')adminLogin()">
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="adminLogin()">Sign In →</button>
+        <div style="text-align:center;margin-top:14px">
+          <a href="?" style="color:var(--muted);font-size:13px">← Back to departments</a>
+        </div>
+      </div>
+    </div>
+  `);
+  setTimeout(()=>document.getElementById('admin-pw')?.focus(), 100);
+}
+
+async function adminLogin() {
+  const pw = document.getElementById('admin-pw')?.value;
+  if (pw === CFG.ADMIN_PASS) {
+    S.adminAuth = true;
+    await renderAdmin();
+  } else {
+    toast('Incorrect password','err');
+  }
+}
+
+// ================================================================
+// 👑  ADMIN DASHBOARD
+// ================================================================
+async function renderAdmin() {
+  S.catalog = await loadCatalog();
+  S.orders = await loadOrders(null);
+
+  const pending   = S.orders.filter(o=>(o.status||o.Status)==='Pending').length;
+  const critical  = S.catalog.filter(p=>stockStatus(p)==='critical').length;
+  const low       = S.catalog.filter(p=>stockStatus(p)==='low').length;
+  const fulfilled = S.orders.filter(o=>(o.status||o.Status)==='Fulfilled').length;
+
+  setHTML(`
+    <div class="hdr">
+      <div class="hdr-logo">🖨️ ${CFG.COMPANY} <span>Purchasing Admin</span></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        ${S.isDemo?'<span class="badge b-demo">Demo Mode</span>':''}
+        <a href="?" class="btn btn-secondary btn-sm">← Departments</a>
+      </div>
+    </div>
+    <div class="wrap">
+      ${S.isDemo?`<div class="alert alert-demo">
+        ⚠️ <strong>Demo Mode</strong> — Data is local to this browser.
+        <strong>To enable Google Sheets:</strong>
+        1) Open <em>Extensions → Apps Script</em> in your Google Sheet,
+        2) Paste the Apps Script code (copy from the page source "apps-script" template tag),
+        3) Deploy as Web App (Anyone can access),
+        4) Paste the URL into <code>CFG.API</code> in this HTML file.
+      </div>`:''}
+      <div class="stats">
+        <div class="stat danger"><div class="stat-val">${pending}</div><div class="stat-lbl">Pending Orders</div></div>
+        <div class="stat danger"><div class="stat-val">${critical}</div><div class="stat-lbl">Critical Stock</div></div>
+        <div class="stat warn"><div class="stat-val">${low}</div><div class="stat-lbl">Low Stock Items</div></div>
+        <div class="stat ok"><div class="stat-val">${fulfilled}</div><div class="stat-lbl">Fulfilled Orders</div></div>
+      </div>
+
+      <div class="tabs" id="admin-tabs">
+        <div class="tab ${S.tab==='orders'?'active':''}" onclick="adminTab('orders')">📋 Orders${pending?` <span class="badge b-crit" style="margin-left:6px">${pending}</span>`:''}  </div>
+        <div class="tab ${S.tab==='inventory'?'active':''}" onclick="adminTab('inventory')">📦 Inventory</div>
+        <div class="tab ${S.tab==='catalog'?'active':''}" onclick="adminTab('catalog')">🗂 Catalog</div>
+      </div>
+      <div id="admin-content"></div>
+    </div>
+  `);
+
+  if (!['orders','inventory','catalog'].includes(S.tab)) S.tab='orders';
+  renderAdminContent();
+}
+
+function adminTab(tab) {
+  S.tab=tab;
+  document.querySelectorAll('#admin-tabs .tab').forEach((t,i)=>{
+    t.classList.toggle('active', ['orders','inventory','catalog'][i]===tab);
+  });
+  renderAdminContent();
+}
+
+function renderAdminContent() {
+  const el = document.getElementById('admin-content');
+  if (!el) return;
+  if (S.tab==='orders')    el.innerHTML = renderAdminOrders();
+  else if (S.tab==='inventory') el.innerHTML = renderAdminInventory();
+  else el.innerHTML = renderAdminCatalog();
+}
+
+function renderAdminOrders() {
+  const depts = ['', ...CFG.DEPTS.map(d=>d.id)];
+  const statuses = ['','Pending','Ordered','Fulfilled','Cancelled'];
+  return `
+    <div class="card">
+      <div class="card-hdr">
+        <h3>All Order Requests</h3>
+        <div class="frow mb-0" style="margin:0">
+          <select id="ao-dept" onchange="filterAdminOrders()">
+            <option value="">All Departments</option>
+            ${CFG.DEPTS.map(d=>`<option value="${d.id}">${d.name}</option>`).join('')}
+          </select>
+          <select id="ao-status" onchange="filterAdminOrders()">
+            <option value="">All Status</option>
+            ${['Pending','Ordered','Fulfilled','Cancelled'].map(s=>`<option>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table id="orders-table">
+          <thead><tr><th>Date</th><th>Dept</th><th>Requester</th><th>Items</th><th>Notes</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${S.orders.length ? S.orders.map(o=>adminOrderRow(o)).join('') : '<tr><td colspan="7" class="text-center td-muted" style="padding:30px">No orders yet.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function adminOrderRow(o) {
+  const id = o.id||o.OrderID;
+  const dept = o.dept||o.Department||'';
+  const status = o.status||o.Status||'Pending';
+  const items = (o.items||o.Items||[]);
+  const requester = o.requester||o.Requester||'—';
+  const notes = o.notes||o.Notes||'';
+  const adminNotes = o.adminNotes||o.AdminNotes||'';
+  return `<tr data-dept="${dept}" data-status="${status}" id="row-${id}">
+    <td class="td-muted" style="white-space:nowrap;font-size:12px">${fmtDate(o.ts||o.Timestamp)}</td>
+    <td><span class="badge b-pending">${getDeptName(dept)}</span></td>
+    <td>${requester}</td>
+    <td>${items.map(i=>`<div style="font-size:12px"><strong>${i.item}</strong> ×${i.qty}<div class="td-muted">${i.vendor}</div></div>`).join('')}</td>
+    <td class="td-muted" style="font-size:12px;max-width:120px">${notes||'—'}</td>
+    <td>${orderBadge(status)}</td>
+    <td>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <select onchange="quickUpdateStatus('${id}',this.value)" style="font-size:12px;padding:4px 8px">
+          ${['Pending','Ordered','Fulfilled','Cancelled'].map(s=>`<option ${s===status?'selected':''}>${s}</option>`).join('')}
+        </select>
+        <input type="text" placeholder="Admin note…" value="${adminNotes}" id="anote-${id}" style="font-size:12px;padding:4px 8px">
+        <button class="btn btn-primary btn-sm" onclick="saveOrderStatus('${id}')">Save</button>
+      </div>
+    </td>
+  </tr>`;
+}
+
+function filterAdminOrders() {
+  const dept = document.getElementById('ao-dept')?.value||'';
+  const status = document.getElementById('ao-status')?.value||'';
+  document.querySelectorAll('#orders-table tbody tr').forEach(r=>{
+    const match = (!dept||r.dataset.dept===dept) && (!status||r.dataset.status===status);
+    r.style.display=match?'':'none';
+  });
+}
+
+async function quickUpdateStatus(orderId, status) {
+  const row = document.getElementById('row-'+orderId);
+  if (row) row.dataset.status=status;
+}
+
+async function saveOrderStatus(orderId) {
+  const sel = document.querySelector(`#row-${orderId} select`);
+  const noteEl = document.getElementById('anote-'+orderId);
+  const status = sel?.value||'Pending';
+  const adminNotes = noteEl?.value||'';
+  const r = await updateOrderStatusApi(orderId, status, adminNotes);
+  if (r?.ok || r) {
+    toast('Order updated ✅','ok');
+    S.orders = await loadOrders(null);
+    renderAdminContent();
+  } else {
+    toast('Error updating order','err');
+  }
+}
+
+function renderAdminInventory() {
+  const depts = CFG.DEPTS.map(d=>d.id);
+  const vendors = [...new Set(S.catalog.map(p=>p.vendor))].sort();
+  return `
+    <div class="card">
+      <div class="card-hdr">
+        <h3>Inventory Management</h3>
+        <div class="frow mb-0" style="margin:0">
+          <div class="search-wrap">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search…" oninput="filterAdminInv(this.value)" id="ai-search">
+          </div>
+          <select id="ai-dept" onchange="filterAdminInv(document.getElementById('ai-search').value)">
+            <option value="">All Departments</option>
+            ${CFG.DEPTS.map(d=>`<option value="${d.id}">${d.name}</option>`).join('')}
+          </select>
+          <select id="ai-vendor" onchange="filterAdminInv(document.getElementById('ai-search').value)">
+            <option value="">All Vendors</option>
+            ${vendors.map(v=>`<option>${v}</option>`).join('')}
+          </select>
+          <select id="ai-status" onchange="filterAdminInv(document.getElementById('ai-search').value)">
+            <option value="">All Status</option>
+            <option value="critical">🔴 Critical</option>
+            <option value="low">🟡 Low</option>
+            <option value="ok">🟢 OK</option>
+          </select>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table id="ai-table">
+          <thead><tr>
+            <th>Status</th><th>Item</th><th>Dept</th><th>Vendor</th>
+            <th style="text-align:center">Stock</th><th style="text-align:center">Min</th><th style="text-align:center">Reorder</th>
+            <th>Update</th>
+          </tr></thead>
+          <tbody>
+            ${S.catalog.map(p=>`<tr data-id="${p.id}" data-item="${p.item.toLowerCase()}" data-dept="${p.dept}" data-vendor="${p.vendor.toLowerCase()}" data-status="${stockStatus(p)||''}">
+              <td>${stockBadge(p)}</td>
+              <td class="td-item">${p.item}<div class="td-muted" style="font-size:11px">${p.part||''}</div></td>
+              <td><span class="badge b-pending">${getDeptName(p.dept)}</span></td>
+              <td>${p.vendor}</td>
+              <td style="text-align:center"><input class="qty-num" type="number" min="0" value="${p.stock??''}" id="stk-${p.id}" placeholder="—"></td>
+              <td style="text-align:center"><input class="qty-num" type="number" min="0" value="${p.minStock??''}" id="min-${p.id}" placeholder="—"></td>
+              <td style="text-align:center"><input class="qty-num" type="number" min="0" value="${p.reorderPoint??p.minStock??''}" id="re-${p.id}" placeholder="—"></td>
+              <td><button class="btn btn-success btn-sm" onclick="saveStock('${p.id}')">Save</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function filterAdminInv(q) {
+  const dept = document.getElementById('ai-dept')?.value||'';
+  const vendor = document.getElementById('ai-vendor')?.value.toLowerCase()||'';
+  const status = document.getElementById('ai-status')?.value||'';
+  document.querySelectorAll('#ai-table tbody tr').forEach(r=>{
+    const match = (!q||r.dataset.item?.includes(q.toLowerCase()))
+      && (!dept||r.dataset.dept===dept)
+      && (!vendor||r.dataset.vendor?.includes(vendor))
+      && (!status||r.dataset.status===status);
+    r.style.display=match?'':'none';
+  });
+}
+
+async function saveStock(id) {
+  const stock = parseFloat(document.getElementById('stk-'+id)?.value);
+  const minStock = parseFloat(document.getElementById('min-'+id)?.value);
+  const reorderPoint = parseFloat(document.getElementById('re-'+id)?.value);
+  const r = await updateStockApi(id, isNaN(stock)?null:stock, isNaN(minStock)?null:minStock, isNaN(reorderPoint)?null:reorderPoint);
+  if (r?.ok || r) {
+    toast('Stock updated ✅','ok');
+    // Update local catalog
+    const p = S.catalog.find(x=>x.id===id);
+    if (p) { p.stock=isNaN(stock)?p.stock:stock; p.minStock=isNaN(minStock)?p.minStock:minStock; p.reorderPoint=isNaN(reorderPoint)?p.reorderPoint:reorderPoint; }
+    // Refresh just the status badge for this row
+    const row = document.querySelector(`#ai-table tr[data-id="${id}"]`);
+    if (row) { row.cells[0].innerHTML = stockBadge(p); row.dataset.status = stockStatus(p)||''; }
+  } else {
+    toast('Error saving stock','err');
+  }
+}
+
+function renderAdminCatalog() {
+  const vendors = [...new Set(S.catalog.map(p=>p.vendor))].sort();
+  return `
+    <div class="card">
+      <div class="card-hdr">
+        <h3>Product Catalog (${S.catalog.length} items)</h3>
+        <div class="frow mb-0" style="margin:0">
+          <div class="search-wrap">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search…" oninput="filterAdminCat(this.value)" id="ac-search">
+          </div>
+          <select id="ac-vendor" onchange="filterAdminCat(document.getElementById('ac-search').value)">
+            <option value="">All Vendors</option>
+            ${vendors.map(v=>`<option>${v}</option>`).join('')}
+          </select>
+          <select id="ac-dept" onchange="filterAdminCat(document.getElementById('ac-search').value)">
+            <option value="">All Departments</option>
+            ${CFG.DEPTS.map(d=>`<option value="${d.id}">${d.name}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table id="ac-table">
+          <thead><tr><th>Item</th><th>Part #</th><th>Vendor</th><th>Unit</th><th>Dept</th></tr></thead>
+          <tbody>
+            ${S.catalog.map(p=>`<tr data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}" data-dept="${p.dept}">
+              <td class="td-item">${p.item}</td>
+              <td class="td-muted">${p.part||'—'}</td>
+              <td>${p.vendor}</td>
+              <td class="td-muted">${p.unit||'—'}</td>
+              <td><span class="badge b-pending">${getDeptName(p.dept)}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+function filterAdminCat(q) {
+  const v = document.getElementById('ac-vendor')?.value.toLowerCase()||'';
+  const d = document.getElementById('ac-dept')?.value||'';
+  document.querySelectorAll('#ac-table tbody tr').forEach(r=>{
+    const match = (!q||r.dataset.item?.includes(q.toLowerCase()))&&(!v||r.dataset.vendor?.includes(v))&&(!d||r.dataset.dept===d);
+    r.style.display=match?'':'none';
+  });
+}
+
+// ================================================================
+// 🚀  START
+// ================================================================
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
