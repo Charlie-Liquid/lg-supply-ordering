@@ -890,7 +890,7 @@ function invRow(p, showDept) {
   </div>` : `<span>${p.stock??'&#8212;'}</span>`;
   return `<tr data-id="${p.id}" data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}">
     <td>${stockBadge(p)}</td>
-    <td class="td-item"><span contenteditable="true" spellcheck="false" style="outline:none;border-bottom:1px dashed transparent;cursor:text;display:inline-block;min-width:60px;padding:1px 3px;border-radius:3px" onfocus="this.style.borderBottomColor='#3b82f6';this.style.background='#eff6ff'" onblur="saveItemName('${p.id}',this.textContent.trim());this.style.borderBottomColor='transparent';this.style.background=''" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">$ {p.item}</span>${showDept?`<div class="td-muted">${getDeptName(p.dept)}</div>`:''}</td>
+    <td class="td-item"><span contenteditable="true" spellcheck="false" style="outline:none;border-bottom:1px dashed transparent;cursor:text;display:inline-block;min-width:60px;padding:1px 3px;border-radius:3px" onfocus="this.style.borderBottomColor='#3b82f6';this.style.background='#eff6ff'" onblur="saveItemName('${p.id}',this.textContent.trim());this.style.borderBottomColor='transparent';this.style.background=''" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">${p.item}</span>${showDept?`<div class="td-muted">${getDeptName(p.dept)}</div>`:''}</td>
     <td class="td-muted">${p.part||'&#8212;'}</td>
     <td>${p.vendor}</td>
     <td class="td-muted">${p.unit||'&#8212;'}</td>
