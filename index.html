@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Liquid Graphics â Supply Ordering</title>
+<title>Liquid Graphics &#8212; Supply Ordering</title>
 <style>
 :root{--primary:#1e40af;--primary-light:#3b82f6;--primary-pale:#eff6ff;--success:#059669;--warning:#d97706;--danger:#dc2626;--bg:#f1f5f9;--card:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--shadow:0 1px 3px rgba(0,0,0,.08)}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -182,12 +182,12 @@ textarea{resize:vertical;min-height:70px}
 <div id="toasts"></div>
 
 <!-- ============================================================
-     APPS SCRIPT CODE â Copy this into Google Apps Script
+     APPS SCRIPT CODE &#8212; Copy this into Google Apps Script
      See SETUP INSTRUCTIONS in LG-Supply-Setup-Guide.html
      ============================================================ -->
 <script type="text/template" id="apps-script">
 // ================================================================
-// LIQUID GRAPHICS â SUPPLY ORDERING SYSTEM â Google Apps Script
+// LIQUID GRAPHICS &#8212; SUPPLY ORDERING SYSTEM &#8212; Google Apps Script
 // Instructions: Extensions > Apps Script > paste this > Deploy
 // ================================================================
 
@@ -247,8 +247,8 @@ function initSheets() {
     ds.getRange(1,1,1,3).setFontWeight('bold').setBackground('#1e40af').setFontColor('#ffffff');
     ds.setFrozenRows(1);
     ds.getRange(2,1,5,3).setValues([
-      ['INK','Ink Department','ð¨'],['SCREEN','Screen Dept','ð¼ï¸'],
-      ['PACK','Packaging','ð¦'],['PROD','Production','âï¸'],['AR','Art & Embroidery','âï¸']
+      ['INK','Ink Department','&#127912;'],['SCREEN','Screen Dept','&#128444;&#65039;'],
+      ['PACK','Packaging','&#128230;'],['PROD','Production','&#9881;&#65039;'],['AR','Art & Embroidery','&#9986;&#65039;']
     ]);
   }
   return { ok: true, message: 'Sheets initialized! Now import your product catalog.' };
@@ -346,7 +346,7 @@ function getDepts() {
 
 <script>
 // ================================================================
-// âï¸  CONFIGURATION  â Edit after setting up Google Apps Script
+// &#9881;&#65039;  CONFIGURATION  &#8212; Edit after setting up Google Apps Script
 // ================================================================
 const CFG = {
   // Paste your deployed Apps Script URL here:
@@ -356,13 +356,13 @@ const CFG = {
   // Admin password (also set in Apps Script if desired):
   ADMIN_PASS: 'LGAdmin2024',
 
-  // Departments â must match Google Sheet Department codes
+  // Departments &#8212; must match Google Sheet Department codes
   DEPTS: [
-    { id:'INK',    name:'Ink Department',       icon:'ð¨' },
-    { id:'SCREEN', name:'Screen Department',    icon:'ð¼ï¸' },
-    { id:'PACK',   name:'Packaging & Shipping', icon:'ð¦' },
-    { id:'PROD',   name:'Production',           icon:'âï¸' },
-    { id:'AR',     name:'Art & Embroidery',     icon:'âï¸' },
+    { id:'INK',    name:'Ink Department',       icon:'&#127912;' },
+    { id:'SCREEN', name:'Screen Department',    icon:'&#128444;&#65039;' },
+    { id:'PACK',   name:'Packaging & Shipping', icon:'&#128230;' },
+    { id:'PROD',   name:'Production',           icon:'&#9881;&#65039;' },
+    { id:'AR',     name:'Art & Embroidery',     icon:'&#9986;&#65039;' },
   ],
 
   // Stock thresholds (multiplier of minStock)
@@ -371,7 +371,7 @@ const CFG = {
 };
 
 // ================================================================
-// ð¦  BUILT-IN PRODUCT CATALOG (from your spreadsheets)
+// &#128230;  BUILT-IN PRODUCT CATALOG (from your spreadsheets)
 //     Loaded automatically into Google Sheets on first setup.
 // ================================================================
 const CATALOG = [
@@ -588,7 +588,7 @@ const CATALOG = [
 ];
 
 // ================================================================
-// ðï¸  APP STATE
+// &#128452;&#65039;  APP STATE
 // ================================================================
 const S = {
   view: 'loading',   // loading | landing | dept | admin
@@ -602,7 +602,7 @@ const S = {
 };
 
 // ================================================================
-// ð  API LAYER
+// &#127760;  API LAYER
 // ================================================================
 const isDemo = () => !CFG.API || CFG.API.includes('YOUR_APPS');
 
@@ -693,7 +693,7 @@ async function updateOrderStatusApi(orderId, status, adminNotes) {
 }
 
 // ================================================================
-// ð·ï¸  HELPERS
+// &#127991;&#65039;  HELPERS
 // ================================================================
 function stockStatus(p) {
   if (p.stock === null || p.stock === undefined) return null;
@@ -706,10 +706,10 @@ function stockStatus(p) {
 
 function stockBadge(p) {
   const st = stockStatus(p);
-  if (!st) return '<span class="badge b-ok">â</span>';
-  if (st==='critical') return '<span class="badge b-crit">ð´ Critical</span>';
-  if (st==='low')      return '<span class="badge b-low">ð¡ Low</span>';
-  return '<span class="badge b-ok">ð¢ OK</span>';
+  if (!st) return '<span class="badge b-ok">&#8212;</span>';
+  if (st==='critical') return '<span class="badge b-crit">&#128308; Critical</span>';
+  if (st==='low')      return '<span class="badge b-low">&#128993; Low</span>';
+  return '<span class="badge b-ok">&#128994; OK</span>';
 }
 
 function orderBadge(status) {
@@ -718,7 +718,7 @@ function orderBadge(status) {
 }
 
 function fmtDate(ts) {
-  if (!ts) return 'â';
+  if (!ts) return '&#8212;';
   try { return new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}); }
   catch{ return ts; }
 }
@@ -740,7 +740,7 @@ function toast(msg, type='') {
 function setHTML(html) { document.getElementById('app').innerHTML = html; }
 
 // ================================================================
-// ð¼ï¸  ROUTER / INIT
+// &#128444;&#65039;  ROUTER / INIT
 // ================================================================
 async function init() {
   const params = new URLSearchParams(location.search);
@@ -756,17 +756,17 @@ async function init() {
 }
 
 // ================================================================
-// ð   LANDING
+// &#127968;  LANDING
 // ================================================================
 function renderLanding() {
   setHTML(`
     <div class="landing">
       ${S.isDemo?`<div class="alert alert-demo" style="max-width:600px;width:100%">
-        â ï¸ <strong>Demo Mode</strong> â Data is stored in your browser only.
+        &#9888;&#65039; <strong>Demo Mode</strong> &#8212; Data is stored in your browser only.
         <a href="?view=admin">Set up Google Sheets</a> to share data across departments.
       </div>`:''}
       <div class="landing-top">
-        <div class="landing-logo">ð¨ï¸</div>
+        <div class="landing-logo">&#128424;&#65039;</div>
         <h1>${CFG.COMPANY} Supply Ordering</h1>
         <p>Select your department to view inventory and submit order requests.</p>
       </div>
@@ -777,13 +777,13 @@ function renderLanding() {
             <div class="name">${d.name}</div>
           </div>`).join('')}
       </div>
-      <span class="admin-link" onclick="location.href='?view=admin'">ð Admin / Purchasing</span>
+      <span class="admin-link" onclick="location.href='?view=admin'">&#128273; Admin / Purchasing</span>
     </div>
   `);
 }
 
 // ================================================================
-// ð¢  DEPARTMENT VIEW
+// &#127970;  DEPARTMENT VIEW
 // ================================================================
 async function renderDept() {
   const dept = CFG.DEPTS.find(d=>d.id===S.dept);
@@ -802,26 +802,26 @@ async function renderDept() {
       <div style="display:flex;align-items:center;gap:10px">
         <span class="hdr-badge">${dept.name}</span>
         <button class="btn btn-secondary btn-sm cart-btn" onclick="openOrderModal()" id="cart-btn">
-          ð Request Order
+          &#128722; Request Order
           <span class="cart-count hidden" id="cart-count">0</span>
         </button>
       </div>
     </div>
     <div class="wrap">
-      ${S.isDemo?`<div class="alert alert-demo">â ï¸ <strong>Demo Mode</strong> â Orders saved in browser only. Configure Google Sheets to persist data.</div>`:''}
+      ${S.isDemo?`<div class="alert alert-demo">&#9888;&#65039; <strong>Demo Mode</strong> &#8212; Orders saved in browser only. Configure Google Sheets to persist data.</div>`:''}
       ${critItems.length?`<div class="alert alert-crit">
-        ð´ <strong>Critical â Order Immediately:</strong>
-        <ul>${critItems.map(p=>`<li>${p.item} (${p.vendor}) â Stock: ${p.stock??'?'}, Min: ${p.minStock}</li>`).join('')}</ul>
+        &#128308; <strong>Critical &#8212; Order Immediately:</strong>
+        <ul>${critItems.map(p=>`<li>${p.item} (${p.vendor}) &#8212; Stock: ${p.stock??'?'}, Min: ${p.minStock}</li>`).join('')}</ul>
       </div>`:''}
       ${lowItems.length?`<div class="alert alert-warn">
-        ð¡ <strong>Running Low â Order Soon:</strong>
-        <ul>${lowItems.map(p=>`<li>${p.item} â Stock: ${p.stock}, Min: ${p.minStock}</li>`).join('')}</ul>
+        &#128993; <strong>Running Low &#8212; Order Soon:</strong>
+        <ul>${lowItems.map(p=>`<li>${p.item} &#8212; Stock: ${p.stock}, Min: ${p.minStock}</li>`).join('')}</ul>
       </div>`:''}
 
       <div class="tabs">
-        <div class="tab ${S.tab==='inventory'?'active':''}" onclick="switchTab('inventory')">ð¦ My Inventory</div>
-        <div class="tab ${S.tab==='orders'?'active':''}" onclick="switchTab('orders')">ð My Orders</div>
-        <div class="tab ${S.tab==='catalog'?'active':''}" onclick="switchTab('catalog')">ð Full Catalog</div>
+        <div class="tab ${S.tab==='inventory'?'active':''}" onclick="switchTab('inventory')">&#128230; My Inventory</div>
+        <div class="tab ${S.tab==='orders'?'active':''}" onclick="switchTab('orders')">&#128203; My Orders</div>
+        <div class="tab ${S.tab==='catalog'?'active':''}" onclick="switchTab('catalog')">&#128450; Full Catalog</div>
       </div>
 
       <div id="tab-content"></div>
@@ -850,20 +850,21 @@ function renderTabContent() {
 function renderInventoryTab() {
   const prods = S.catalog.filter(p=>p.dept===S.dept && p.stock!==null);
   const vendors = [...new Set(prods.map(p=>p.vendor))].sort();
-  if (!prods.length) return `<div class="empty-state"><div class="icon">ð¦</div><p>No inventory data yet. An admin needs to set stock levels.</p></div>`;
+  if (!prods.length) return `<div class="empty-state"><div class="icon">&#128230;</div><p>No inventory data yet. An admin needs to set stock levels.</p></div>`;
   return `
     <div class="card">
       <div class="card-hdr">
-        <h3>Inventory â ${getDeptName(S.dept)}</h3>
+        <h3>Inventory &#8212; ${getDeptName(S.dept)}</h3>
         <div class="frow mb-0" style="margin:0">
           <div class="search-wrap">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" placeholder="Search itemsâ¦" oninput="filterInv(this.value)" id="inv-search">
+            <input type="text" placeholder="Search items&#8230;" oninput="filterInv(this.value)" id="inv-search">
           </div>
           <select onchange="filterInvVendor(this.value)" id="inv-vendor">
             <option value="">All Vendors</option>
             ${vendors.map(v=>`<option>${v}</option>`).join('')}
           </select>
+          <button class="btn btn-secondary btn-sm" onclick="openNewDeptItemModal()">+ Add Item</button>
         </div>
       </div>
       <div class="tbl-wrap">
@@ -886,16 +887,16 @@ function invRow(p, showDept) {
   const bar = p.minStock ? `<div class="stock-bar-wrap">
     <span style="min-width:24px;text-align:right">${p.stock??'?'}</span>
     <div class="stock-bar"><div class="stock-bar-fill" style="width:${Math.min(100,((p.stock||0)/(p.minStock*2))*100)}%;background:${st==='critical'?'#dc2626':st==='low'?'#d97706':'#059669'}"></div></div>
-  </div>` : `<span>${p.stock??'â'}</span>`;
+  </div>` : `<span>${p.stock??'&#8212;'}</span>`;
   return `<tr data-id="${p.id}" data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}">
     <td>${stockBadge(p)}</td>
-    <td class="td-item">${p.item}${showDept?`<div class="td-muted">${getDeptName(p.dept)}</div>`:''}</td>
-    <td class="td-muted">${p.part||'â'}</td>
+    <td class="td-item"><span contenteditable="true" spellcheck="false" style="outline:none;border-bottom:1px dashed transparent;cursor:text;display:inline-block;min-width:60px;padding:1px 3px;border-radius:3px" onfocus="this.style.borderBottomColor='#3b82f6';this.style.background='#eff6ff'" onblur="saveItemName('${p.id}',this.textContent.trim());this.style.borderBottomColor='transparent';this.style.background=''" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">$ {p.item}</span>${showDept?`<div class="td-muted">${getDeptName(p.dept)}</div>`:''}</td>
+    <td class="td-muted">${p.part||'&#8212;'}</td>
     <td>${p.vendor}</td>
-    <td class="td-muted">${p.unit||'â'}</td>
+    <td class="td-muted">${p.unit||'&#8212;'}</td>
     <td style="text-align:center">${bar}</td>
-    <td style="text-align:center" class="td-muted">${p.minStock??'â'}</td>
-    <td><button class="btn btn-sm ${st==='critical'?'btn-danger':st==='low'?'btn-warn':'btn-secondary'}" onclick="addToCart('${p.id}')">+ Request</button></td>
+    <td style="text-align:center" class="td-muted">${p.minStock??'&#8212;'}</td>
+    <td style="white-space:nowrap"><input type="number" min="1" value="1" id="qty-${p.id}" style="width:52px;padding:4px 6px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;text-align:center;vertical-align:middle;margin-right:4px"><button class="btn btn-sm ${st==='critical'?'btn-danger':st==='low'?'btn-warn':'btn-secondary'}" onclick="addToCart('${p.id}')">+ Request</button></td>
   </tr>`;
 }
 
@@ -911,7 +912,7 @@ function filterInvVendor(v) { filterInv(document.getElementById('inv-search')?.v
 
 function renderOrdersTab() {
   const orders = S.orders;
-  if (!orders.length) return `<div class="empty-state"><div class="icon">ð</div><p>No order requests yet. Use the Request Order button to submit one.</p></div>`;
+  if (!orders.length) return `<div class="empty-state"><div class="icon">&#128203;</div><p>No order requests yet. Use the Request Order button to submit one.</p></div>`;
   return `
     <div class="card">
       <div class="card-hdr"><h3>My Order History</h3></div>
@@ -921,11 +922,11 @@ function renderOrdersTab() {
           <tbody>
             ${orders.map(o=>`<tr>
               <td class="td-muted" style="white-space:nowrap">${fmtDate(o.ts||o.Timestamp)}</td>
-              <td>${o.requester||o.Requester||'â'}</td>
-              <td>${(o.items||o.Items||[]).map(i=>`<div class="td-item" style="font-size:12px">${i.item} <span class="td-muted">Ã${i.qty}</span></div>`).join('')}</td>
-              <td class="td-muted">${o.notes||o.Notes||'â'}</td>
+              <td>${o.requester||o.Requester||'&#8212;'}</td>
+              <td>${(o.items||o.Items||[]).map(i=>`<div class="td-item" style="font-size:12px">${i.item} <span class="td-muted">&#215;${i.qty}</span></div>`).join('')}</td>
+              <td class="td-muted">${o.notes||o.Notes||'&#8212;'}</td>
               <td>${orderBadge(o.status||o.Status||'Pending')}</td>
-              <td class="td-muted">${o.adminNotes||o.AdminNotes||'â'}</td>
+              <td class="td-muted">${o.adminNotes||o.AdminNotes||'&#8212;'}</td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -942,7 +943,7 @@ function renderCatalogTab() {
         <div class="frow mb-0" style="margin:0">
           <div class="search-wrap">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" placeholder="Searchâ¦" oninput="filterCat(this.value)" id="cat-search">
+            <input type="text" placeholder="Search&#8230;" oninput="filterCat(this.value)" id="cat-search">
           </div>
           <select onchange="filterCatVendor(this.value)" id="cat-vendor">
             <option value="">All Vendors</option>
@@ -955,11 +956,11 @@ function renderCatalogTab() {
           <thead><tr><th>Item</th><th>Part #</th><th>Vendor</th><th>Unit</th><th></th></tr></thead>
           <tbody>
             ${S.catalog.map(p=>`<tr data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}">
-              <td class="td-item">${p.item}</td>
-              <td class="td-muted">${p.part||'â'}</td>
+              <td class="td-item"><span contenteditable="true" spellcheck="false" style="outline:none;border-bottom:1px dashed transparent;cursor:text;display:inline-block;min-width:60px;padding:1px 3px;border-radius:3px" onfocus="this.style.borderBottomColor='#3b82f6';this.style.background='#eff6ff'" onblur="saveItemName('${p.id}',this.textContent.trim());this.style.borderBottomColor='transparent';this.style.background=''" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">${p.item}</span></td>
+              <td class="td-muted">${p.part||'&#8212;'}</td>
               <td>${p.vendor}</td>
-              <td class="td-muted">${p.unit||'â'}</td>
-              <td><button class="btn btn-secondary btn-sm" onclick="addToCart('${p.id}')">+ Add</button></td>
+              <td class="td-muted">${p.unit||'&#8212;'}</td>
+              <td style="white-space:nowrap"><input type="number" min="1" value="1" id="qty-${p.id}" style="width:52px;padding:4px 6px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;text-align:center;vertical-align:middle;margin-right:4px"><button class="btn btn-secondary btn-sm" onclick="addToCart('${p.id}')">+ Add</button></td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -977,16 +978,91 @@ function filterCat(q) {
 function filterCatVendor() { filterCat(document.getElementById('cat-search')?.value||''); }
 
 // ================================================================
-// ð  ORDER MODAL (Department)
+// &#128722;  ORDER MODAL (Department)
 // ================================================================
 function addToCart(id) {
   const prod = S.catalog.find(p=>p.id===id);
   if (!prod) return;
+  const qtyEl = document.getElementById('qty-'+id);
+  const qty = qtyEl ? Math.max(1, parseInt(qtyEl.value)||1) : 1;
   const existing = S.cart.find(c=>c.product.id===id);
-  if (existing) { toast(`${prod.item} already in cart`,''); return; }
-  S.cart.push({product:prod, qty:1});
+  if (existing) {
+    existing.qty += qty;
+    updateCartBadge();
+    toast(`Updated: ${prod.item} &#215;${existing.qty}`, 'ok');
+    return;
+  }
+  S.cart.push({product:prod, qty});
   updateCartBadge();
-  toast(`Added: ${prod.item}`, 'ok');
+  toast(`Added: ${prod.item} &#215;${qty}`, 'ok');
+}
+
+function saveItemName(id, name) {
+  if (!name) return;
+  const prod = S.catalog.find(p=>p.id===id);
+  if (prod && prod.item !== name) {
+    prod.item = name;
+    // update data-item on the row for filtering
+    const row = document.querySelector(`tr[data-id="${id}"]`);
+    if (row) row.dataset.item = name.toLowerCase();
+    toast(`Renamed to: ${name}`, 'ok');
+  }
+}
+
+function openNewDeptItemModal() {
+  const existing = document.getElementById('new-item-modal');
+  if (existing) existing.remove();
+  const vendors = [...new Set(S.catalog.map(p=>p.vendor))].sort();
+  const overlay = document.createElement('div');
+  overlay.className='overlay';
+  overlay.id='new-item-modal';
+  overlay.innerHTML=`
+    <div class="modal" style="max-width:480px">
+      <div class="modal-hdr">
+        <h3>&#43; Add Item to ${getDeptName(S.dept)}</h3>
+        <button class="close-btn" onclick="document.getElementById('new-item-modal').remove()">&#215;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Item Name *</label>
+          <input type="text" id="ni-name" placeholder="e.g. Plastisol Ink - Red" autofocus>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Part / SKU</label>
+            <input type="text" id="ni-part" placeholder="optional">
+          </div>
+          <div class="form-group">
+            <label>Unit</label>
+            <input type="text" id="ni-unit" placeholder="e.g. gallon, box">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Vendor</label>
+          <input type="text" id="ni-vendor" list="ni-vendor-list" placeholder="Vendor name">
+          <datalist id="ni-vendor-list">${vendors.map(v=>`<option value="${v}">`).join('')}</datalist>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" onclick="document.getElementById('new-item-modal').remove()">Cancel</button>
+        <button class="btn btn-primary" onclick="addNewDeptItem()">Add Item</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function addNewDeptItem() {
+  const name = document.getElementById('ni-name')?.value.trim();
+  if (!name) { toast('Item name is required','err'); return; }
+  const part   = document.getElementById('ni-part')?.value.trim()||'';
+  const unit   = document.getElementById('ni-unit')?.value.trim()||'';
+  const vendor = document.getElementById('ni-vendor')?.value.trim()||'Unknown';
+  const id = 'CUSTOM-' + Date.now();
+  const newProd = { id, part, item:name, vendor, unit, dept:S.dept, minStock:null, stock:null };
+  S.catalog.push(newProd);
+  document.getElementById('new-item-modal')?.remove();
+  renderTabContent();
+  toast(`Added: ${name}`, 'ok');
 }
 
 function updateCartBadge() {
@@ -1004,8 +1080,8 @@ function openOrderModal() {
   overlay.innerHTML = `
     <div class="modal">
       <div class="modal-hdr">
-        <h3>ð Submit Order Request</h3>
-        <button class="close-btn" onclick="document.getElementById('order-modal').remove()">Ã</button>
+        <h3>&#128722; Submit Order Request</h3>
+        <button class="close-btn" onclick="document.getElementById('order-modal').remove()">&#215;</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -1026,7 +1102,7 @@ function openOrderModal() {
       </div>
       <div class="modal-foot">
         <button class="btn btn-secondary" onclick="document.getElementById('order-modal').remove()">Cancel</button>
-        <button class="btn btn-primary" onclick="submitOrder()">ð¤ Submit Request</button>
+        <button class="btn btn-primary" onclick="submitOrder()">&#128228; Submit Request</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -1034,9 +1110,9 @@ function openOrderModal() {
 
 function cartItemRow(c) {
   return `<div class="oi" id="cart-row-${c.product.id}">
-    <div class="oi-name">${c.product.item}<div class="td-muted">${c.product.vendor} Â· ${c.product.unit||'â'}</div></div>
+    <div class="oi-name">${c.product.item}<div class="td-muted">${c.product.vendor} &#183; ${c.product.unit||'&#8212;'}</div></div>
     <input class="oi-qty" type="number" min="1" value="${c.qty}" onchange="updateCartQty('${c.product.id}',this.value)" placeholder="Qty">
-    <button class="oi-remove" onclick="removeFromCart('${c.product.id}')">Ã</button>
+    <button class="oi-remove" onclick="removeFromCart('${c.product.id}')">&#215;</button>
   </div>`;
 }
 
@@ -1053,7 +1129,7 @@ function removeFromCart(id) {
 }
 
 function openAddItemModal() {
-  const vendors = [...new Set(S.catalog.map(p=>p.vendor))].sort();
+  const vendors = [...new Set(S.catalog.map(p=>p.vendor))].sort;
   const overlay2 = document.createElement('div');
   overlay2.className='overlay';
   overlay2.id='add-item-modal';
@@ -1062,13 +1138,13 @@ function openAddItemModal() {
     <div class="modal">
       <div class="modal-hdr">
         <h3>Search & Add Items</h3>
-        <button class="close-btn" onclick="document.getElementById('add-item-modal').remove()">Ã</button>
+        <button class="close-btn" onclick="document.getElementById('add-item-modal').remove()">&#215;</button>
       </div>
       <div class="modal-body">
         <div class="frow">
           <div class="search-wrap flex-1">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" id="add-search" placeholder="Search itemsâ¦" oninput="filterAddItems(this.value)" autofocus>
+            <input type="text" id="add-search" placeholder="Search items&#8230;" oninput="filterAddItems(this.value)" autofocus>
           </div>
           <select id="add-vendor" onchange="filterAddItems(document.getElementById('add-search').value)">
             <option value="">All Vendors</option>
@@ -1082,7 +1158,7 @@ function openAddItemModal() {
               ${S.catalog.map(p=>`<tr data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}">
                 <td>${p.item}${p.part?`<div class="td-muted">${p.part}</div>`:''}</td>
                 <td>${p.vendor}</td>
-                <td class="td-muted">${p.unit||'â'}</td>
+                <td class="td-muted">${p.unit||'&#8212;'}</td>
                 <td><button class="btn btn-primary btn-sm" onclick="addToCartFromModal('${p.id}')">Add</button></td>
               </tr>`).join('')}
             </tbody>
@@ -1121,7 +1197,7 @@ async function submitOrder() {
   const items = S.cart.map(c=>({id:c.product.id, item:c.product.item, vendor:c.product.vendor, unit:c.product.unit, qty:c.qty}));
   const r = await submitOrderApi({dept:S.dept, requester:name, items, notes});
   if (r?.ok || r) {
-    toast('Order request submitted! â', 'ok');
+    toast('Order request submitted! &#9989;', 'ok');
     S.cart = [];
     updateCartBadge();
     document.getElementById('order-modal')?.remove();
@@ -1133,22 +1209,22 @@ async function submitOrder() {
 }
 
 // ================================================================
-// ð  ADMIN LOGIN
+// &#128272;  ADMIN LOGIN
 // ================================================================
 function renderAdminLogin() {
   setHTML(`
     <div class="landing">
       <div class="login-box">
-        <div style="font-size:36px;text-align:center;margin-bottom:12px">ð</div>
+        <div style="font-size:36px;text-align:center;margin-bottom:12px">&#128273;</div>
         <h2>Admin Access</h2>
         <p>${CFG.COMPANY} Purchasing Dashboard</p>
         <div class="form-group">
           <label>Admin Password</label>
           <input type="password" id="admin-pw" placeholder="Enter password" onkeydown="if(event.key==='Enter')adminLogin()">
         </div>
-        <button class="btn btn-primary" style="width:100%" onclick="adminLogin()">Sign In â</button>
+        <button class="btn btn-primary" style="width:100%" onclick="adminLogin()">Sign In &#8594;</button>
         <div style="text-align:center;margin-top:14px">
-          <a href="?" style="color:var(--muted);font-size:13px">â Back to departments</a>
+          <a href="?" style="color:var(--muted);font-size:13px">&#8592; Back to departments</a>
         </div>
       </div>
     </div>
@@ -1167,7 +1243,7 @@ async function adminLogin() {
 }
 
 // ================================================================
-// ð  ADMIN DASHBOARD
+// &#128081;  ADMIN DASHBOARD
 // ================================================================
 async function renderAdmin() {
   S.catalog = await loadCatalog();
@@ -1180,17 +1256,17 @@ async function renderAdmin() {
 
   setHTML(`
     <div class="hdr">
-      <div class="hdr-logo">ð¨ï¸ ${CFG.COMPANY} <span>Purchasing Admin</span></div>
+      <div class="hdr-logo">&#128424;&#65039; ${CFG.COMPANY} <span>Purchasing Admin</span></div>
       <div style="display:flex;gap:10px;align-items:center">
         ${S.isDemo?'<span class="badge b-demo">Demo Mode</span>':''}
-        <a href="?" class="btn btn-secondary btn-sm">â Departments</a>
+        <a href="?" class="btn btn-secondary btn-sm">&#8592; Departments</a>
       </div>
     </div>
     <div class="wrap">
       ${S.isDemo?`<div class="alert alert-demo">
-        â ï¸ <strong>Demo Mode</strong> â Data is local to this browser.
+        &#9888;&#65039; <strong>Demo Mode</strong> &#8212; Data is local to this browser.
         <strong>To enable Google Sheets:</strong>
-        1) Open <em>Extensions â Apps Script</em> in your Google Sheet,
+        1) Open <em>Extensions &#8594; Apps Script</em> in your Google Sheet,
         2) Paste the Apps Script code (copy from the page source "apps-script" template tag),
         3) Deploy as Web App (Anyone can access),
         4) Paste the URL into <code>CFG.API</code> in this HTML file.
@@ -1203,9 +1279,9 @@ async function renderAdmin() {
       </div>
 
       <div class="tabs" id="admin-tabs">
-        <div class="tab ${S.tab==='orders'?'active':''}" onclick="adminTab('orders')">ð Orders${pending?` <span class="badge b-crit" style="margin-left:6px">${pending}</span>`:''}  </div>
-        <div class="tab ${S.tab==='inventory'?'active':''}" onclick="adminTab('inventory')">ð¦ Inventory</div>
-        <div class="tab ${S.tab==='catalog'?'active':''}" onclick="adminTab('catalog')">ð Catalog</div>
+        <div class="tab ${S.tab==='orders'?'active':''}" onclick="adminTab('orders')">&#128203; Orders${pending?` <span class="badge b-crit" style="margin-left:6px">${pending}</span>`:''}  </div>
+        <div class="tab ${S.tab==='inventory'?'active':''}" onclick="adminTab('inventory')">&#128230; Inventory</div>
+        <div class="tab ${S.tab==='catalog'?'active':''}" onclick="adminTab('catalog')">&#128450; Catalog</div>
       </div>
       <div id="admin-content"></div>
     </div>
@@ -1265,22 +1341,22 @@ function adminOrderRow(o) {
   const dept = o.dept||o.Department||'';
   const status = o.status||o.Status||'Pending';
   const items = (o.items||o.Items||[]);
-  const requester = o.requester||o.Requester||'â';
+  const requester = o.requester||o.Requester||'&#8212;';
   const notes = o.notes||o.Notes||'';
   const adminNotes = o.adminNotes||o.AdminNotes||'';
   return `<tr data-dept="${dept}" data-status="${status}" id="row-${id}">
     <td class="td-muted" style="white-space:nowrap;font-size:12px">${fmtDate(o.ts||o.Timestamp)}</td>
     <td><span class="badge b-pending">${getDeptName(dept)}</span></td>
     <td>${requester}</td>
-    <td>${items.map(i=>`<div style="font-size:12px"><strong>${i.item}</strong> Ã${i.qty}<div class="td-muted">${i.vendor}</div></div>`).join('')}</td>
-    <td class="td-muted" style="font-size:12px;max-width:120px">${notes||'â'}</td>
+    <td>${items.map(i=>`<div style="font-size:12px"><strong>${i.item}</strong> &#215;${i.qty}<div class="td-muted">${i.vendor}</div></div>`).join('')}</td>
+    <td class="td-muted" style="font-size:12px;max-width:120px">${notes||'&#8212;'}</td>
     <td>${orderBadge(status)}</td>
     <td>
       <div style="display:flex;flex-direction:column;gap:5px">
         <select onchange="quickUpdateStatus('${id}',this.value)" style="font-size:12px;padding:4px 8px">
           ${['Pending','Ordered','Fulfilled','Cancelled'].map(s=>`<option ${s===status?'selected':''}>${s}</option>`).join('')}
         </select>
-        <input type="text" placeholder="Admin noteâ¦" value="${adminNotes}" id="anote-${id}" style="font-size:12px;padding:4px 8px">
+        <input type="text" placeholder="Admin note&#8230;" value="${adminNotes}" id="anote-${id}" style="font-size:12px;padding:4px 8px">
         <button class="btn btn-primary btn-sm" onclick="saveOrderStatus('${id}')">Save</button>
       </div>
     </td>
@@ -1308,7 +1384,7 @@ async function saveOrderStatus(orderId) {
   const adminNotes = noteEl?.value||'';
   const r = await updateOrderStatusApi(orderId, status, adminNotes);
   if (r?.ok || r) {
-    toast('Order updated â','ok');
+    toast('Order updated &#9989;','ok');
     S.orders = await loadOrders(null);
     renderAdminContent();
   } else {
@@ -1326,7 +1402,7 @@ function renderAdminInventory() {
         <div class="frow mb-0" style="margin:0">
           <div class="search-wrap">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" placeholder="Searchâ¦" oninput="filterAdminInv(this.value)" id="ai-search">
+            <input type="text" placeholder="Search&#8230;" oninput="filterAdminInv(this.value)" id="ai-search">
           </div>
           <select id="ai-dept" onchange="filterAdminInv(document.getElementById('ai-search').value)">
             <option value="">All Departments</option>
@@ -1338,9 +1414,9 @@ function renderAdminInventory() {
           </select>
           <select id="ai-status" onchange="filterAdminInv(document.getElementById('ai-search').value)">
             <option value="">All Status</option>
-            <option value="critical">ð´ Critical</option>
-            <option value="low">ð¡ Low</option>
-            <option value="ok">ð¢ OK</option>
+            <option value="critical">&#128308; Critical</option>
+            <option value="low">&#128993; Low</option>
+            <option value="ok">&#128994; OK</option>
           </select>
         </div>
       </div>
@@ -1357,9 +1433,9 @@ function renderAdminInventory() {
               <td class="td-item">${p.item}<div class="td-muted" style="font-size:11px">${p.part||''}</div></td>
               <td><span class="badge b-pending">${getDeptName(p.dept)}</span></td>
               <td>${p.vendor}</td>
-              <td style="text-align:center"><input class="qty-num" type="number" min="0" value="${p.stock??''}" id="stk-${p.id}" placeholder="â"></td>
-              <td style="text-align:center"><input class="qty-num" type="number" min="0" value="${p.minStock??''}" id="min-${p.id}" placeholder="â"></td>
-              <td style="text-align:center"><input class="qty-num" type="number" min="0" value="${p.reorderPoint??p.minStock??''}" id="re-${p.id}" placeholder="â"></td>
+              <td style="text-align:center"><input class="qty-num" type="number" min="0" value="${p.stock??''}" id="stk-${p.id}" placeholder="&#8212;"></td>
+              <td style="text-align:center"><input class="qty-num" type="number" min="0" value="${p.minStock??''}" id="min-${p.id}" placeholder="&#8212;"></td>
+              <td style="text-align:center"><input class="qty-num" type="number" min="0" value="${p.reorderPoint??p.minStock??''}" id="re-${p.id}" placeholder="&#8212;"></td>
               <td><button class="btn btn-success btn-sm" onclick="saveStock('${p.id}')">Save</button></td>
             </tr>`).join('')}
           </tbody>
@@ -1387,7 +1463,7 @@ async function saveStock(id) {
   const reorderPoint = parseFloat(document.getElementById('re-'+id)?.value);
   const r = await updateStockApi(id, isNaN(stock)?null:stock, isNaN(minStock)?null:minStock, isNaN(reorderPoint)?null:reorderPoint);
   if (r?.ok || r) {
-    toast('Stock updated â','ok');
+    toast('Stock updated &#9989;','ok');
     // Update local catalog
     const p = S.catalog.find(x=>x.id===id);
     if (p) { p.stock=isNaN(stock)?p.stock:stock; p.minStock=isNaN(minStock)?p.minStock:minStock; p.reorderPoint=isNaN(reorderPoint)?p.reorderPoint:reorderPoint; }
@@ -1408,7 +1484,7 @@ function renderAdminCatalog() {
         <div class="frow mb-0" style="margin:0">
           <div class="search-wrap">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" placeholder="Searchâ¦" oninput="filterAdminCat(this.value)" id="ac-search">
+            <input type="text" placeholder="Search&#8230;" oninput="filterAdminCat(this.value)" id="ac-search">
           </div>
           <select id="ac-vendor" onchange="filterAdminCat(document.getElementById('ac-search').value)">
             <option value="">All Vendors</option>
@@ -1426,9 +1502,9 @@ function renderAdminCatalog() {
           <tbody>
             ${S.catalog.map(p=>`<tr data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}" data-dept="${p.dept}">
               <td class="td-item">${p.item}</td>
-              <td class="td-muted">${p.part||'â'}</td>
+              <td class="td-muted">${p.part||'&#8212;'}</td>
               <td>${p.vendor}</td>
-              <td class="td-muted">${p.unit||'â'}</td>
+              <td class="td-muted">${p.unit||'&#8212;'}</td>
               <td><span class="badge b-pending">${getDeptName(p.dept)}</span></td>
             </tr>`).join('')}
           </tbody>
@@ -1446,7 +1522,7 @@ function filterAdminCat(q) {
 }
 
 // ================================================================
-// ð  START
+// &#128640;  START
 // ================================================================
 window.addEventListener('DOMContentLoaded', init);
 </script>
