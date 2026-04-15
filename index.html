@@ -358,11 +358,7 @@ const CFG = {
 
   // Departments &#8212; must match Google Sheet Department codes
   DEPTS: [
-    { id:'INK',    name:'Ink Department',       icon:'&#127912;' },
     { id:'SCREEN', name:'Screen Department',    icon:'&#128444;&#65039;' },
-    { id:'PACK',   name:'Packaging & Shipping', icon:'&#128230;' },
-    { id:'PROD',   name:'Production',           icon:'&#9881;&#65039;' },
-    { id:'AR',     name:'Art & Embroidery',     icon:'&#9986;&#65039;' },
   ],
 
   // Stock thresholds (multiplier of minStock)
@@ -752,7 +748,7 @@ async function init() {
 
   if (view === 'admin') { renderAdminLogin(); return; }
   if (dept && CFG.DEPTS.find(d=>d.id===dept)) { S.dept=dept; await renderDept(); return; }
-  renderLanding();
+  S.dept = 'SCREEN'; await renderDept();
 }
 
 // ================================================================
@@ -1129,7 +1125,7 @@ function removeFromCart(id) {
 }
 
 function openAddItemModal() {
-  const vendors = [...new Set(S.catalog.map(p=>p.vendor))].sort;
+  const vendors = [...new Set(S.catalog.map(p=>p.vendor))].sort();
   const overlay2 = document.createElement('div');
   overlay2.className='overlay';
   overlay2.id='add-item-modal';
@@ -1138,7 +1134,7 @@ function openAddItemModal() {
     <div class="modal">
       <div class="modal-hdr">
         <h3>Search & Add Items</h3>
-        <button class="close-btn" onclick="document.getElementById('add-item-modal').remove()">&#215;</button>
+       <button class="close-btn" onclick="document.getElementById('add-item-modal').remove()">&#215;</button>
       </div>
       <div class="modal-body">
         <div class="frow">
@@ -1317,7 +1313,7 @@ function renderAdminOrders() {
         <div class="frow mb-0" style="margin:0">
           <select id="ao-dept" onchange="filterAdminOrders()">
             <option value="">All Departments</option>
-            ${CFG.DEPTS.map(d=>`<option value="${d.id}">${d.name}</option>`).join('')}
+            ${CFG.DEPTS.map(d=>>`<option value="${d.id}">${d.name}</option>`).join('')}
           </select>
           <select id="ao-status" onchange="filterAdminOrders()">
             <option value="">All Status</option>
