@@ -1313,7 +1313,7 @@ function renderAdminOrders() {
         <div class="frow mb-0" style="margin:0">
           <select id="ao-dept" onchange="filterAdminOrders()">
             <option value="">All Departments</option>
-            ${CFG.DEPTS.map(d=>>`<option value="${d.id}">${d.name}</option>`).join('')}
+            ${CFG.DEPTS.map(d=>`<option value="${d.id}">${d.name}</option>`).join('')}
           </select>
           <select id="ao-status" onchange="filterAdminOrders()">
             <option value="">All Status</option>
