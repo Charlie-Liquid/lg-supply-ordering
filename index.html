@@ -188,6 +188,86 @@ select option{background:#151515}
 .qty-num{width:65px;text-align:center}
 .divider{border:none;border-top:1px solid var(--border);margin:16px 0}
 @media(max-width:640px){.wrap{padding:12px}.form-row{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.hdr{padding:10px 16px}}
+
+/* ── ENHANCEMENTS ─────────────────────────────────────── */
+
+/* Orange racing stripe at very top of viewport */
+html{border-top:3px solid var(--primary)}
+
+/* Subtle dot-grid texture on the background */
+body{background-image:radial-gradient(circle,rgba(255,255,255,.038) 1px,transparent 1px);background-size:28px 28px}
+
+/* Thin dark scrollbars */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:1px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* ── KEYFRAMES ─────────────────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes titleReveal{from{opacity:0;letter-spacing:.18em}to{opacity:1;letter-spacing:.03em}}
+@keyframes critPulse{0%,100%{border-color:rgba(239,68,68,.25);box-shadow:none}50%{border-color:rgba(239,68,68,.9);box-shadow:0 0 7px rgba(239,68,68,.35)}}
+@keyframes modalIn{from{opacity:0;transform:translateY(-10px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── ENTRANCE ANIMATIONS ──────────────────────────────── */
+
+/* Stats stagger in */
+.stat{animation:fadeUp .32s ease both}
+.stat:nth-child(2){animation-delay:.07s}
+.stat:nth-child(3){animation-delay:.14s}
+.stat:nth-child(4){animation-delay:.21s}
+.stat:nth-child(5){animation-delay:.28s}
+
+/* Cards fade up */
+.card{animation:fadeUp .28s ease both}
+
+/* Landing — dept cards stagger */
+.dept-card{opacity:0;animation:cardIn .42s cubic-bezier(.16,1,.3,1) forwards}
+.dept-card:nth-child(1){animation-delay:.1s}
+.dept-card:nth-child(2){animation-delay:.17s}
+.dept-card:nth-child(3){animation-delay:.24s}
+.dept-card:nth-child(4){animation-delay:.31s}
+.dept-card:nth-child(5){animation-delay:.38s}
+
+/* Landing copy */
+.landing h1{animation:titleReveal .55s cubic-bezier(.16,1,.3,1) .08s both}
+.landing-top p{animation:fadeUp .4s ease .22s both}
+.landing-logo{animation:fadeIn .3s ease both}
+
+/* Modal slide in */
+.modal{animation:modalIn .22s cubic-bezier(.16,1,.3,1)}
+
+/* Alerts */
+.alert{animation:fadeIn .18s ease both}
+
+/* ── MICRO-INTERACTIONS ────────────────────────────────── */
+
+/* Button press */
+.btn:active:not(:disabled){transform:scale(.96)}
+
+/* Table row left-edge accent on hover */
+td{transition:background .1s,box-shadow .1s}
+tr:hover td:first-child{box-shadow:inset 3px 0 0 var(--primary)}
+
+/* Critical badge breathing pulse */
+.b-crit{animation:critPulse 2.2s ease-in-out infinite}
+
+/* Dept card orange glow on hover */
+.dept-card{transition:border-color .18s,transform .18s,box-shadow .18s}
+.dept-card:hover{box-shadow:0 0 0 1px var(--primary),0 10px 36px rgba(255,85,0,.14)}
+
+/* Stock bar slightly taller + transition */
+.stock-bar{height:5px}
+.stock-bar-fill{transition:width .5s cubic-bezier(.4,0,.2,1)}
+
+/* Form inputs — subtle left border on focus */
+input:focus,select:focus,textarea:focus{border-left-width:2px;border-left-color:var(--primary)}
+
+/* Header logo slight brightness boost */
+.hdr-logo img{filter:brightness(1.08);transition:filter .15s}
+.hdr-logo img:hover{filter:brightness(1.2)}
 </style>
 </head>
 <body>
