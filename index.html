@@ -778,8 +778,8 @@ function renderLanding() {
         <a href="?view=admin">Set up Google Sheets</a> to share data across departments.
       </div>`:''}
       <div class="landing-top">
-        <div class="landing-logo">&#128424;&#65039;</div>
-        <h1>${CFG.COMPANY} Supply Ordering</h1>
+        <div class="landing-logo"><img src="./logo.png" alt="Liquid Graphics" style="height:64px;width:auto;object-fit:contain"></div>
+        <h1>Supply Ordering</h1>
         <p>Select your department to view inventory and submit order requests.</p>
       </div>
       <div class="dept-grid">
@@ -808,7 +808,7 @@ async function renderDept() {
   setHTML(`
     <div class="hdr">
       <div class="hdr-logo">
-        ${dept.icon} ${CFG.COMPANY}
+        <img src="./logo.png" alt="Liquid Graphics" style="height:32px;width:auto;object-fit:contain">
         <span>Supply Ordering</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
@@ -1268,7 +1268,7 @@ async function renderAdmin() {
 
   setHTML(`
     <div class="hdr">
-      <div class="hdr-logo">&#128424;&#65039; ${CFG.COMPANY} <span>Purchasing Admin</span></div>
+      <div class="hdr-logo"><img src="./logo.png" alt="Liquid Graphics" style="height:32px;width:auto;object-fit:contain"> <span>Purchasing Admin</span></div>
       <div style="display:flex;gap:10px;align-items:center">
         ${S.isDemo?'<span class="badge b-demo">Demo Mode</span>':''}
         <a href="?" class="btn btn-secondary btn-sm">&#8592; Departments</a>
