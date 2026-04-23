@@ -1657,23 +1657,126 @@ function renderAdminCatalog() {
             <option value="">All Departments</option>
             ${CFG.DEPTS.map(d=>`<option value="${d.id}">${d.name}</option>`).join('')}
           </select>
+          <button class="btn btn-primary btn-sm" onclick="openAdminAddItem()">+ Add Item</button>
         </div>
       </div>
       <div class="tbl-wrap">
         <table id="ac-table">
-          <thead><tr><th>Item</th><th>Part #</th><th>Vendor</th><th>Unit</th><th>Dept</th></tr></thead>
+          <thead><tr><th>Item</th><th>Part #</th><th>Vendor</th><th>Unit</th><th>Dept</th><th></th></tr></thead>
           <tbody>
-            ${S.catalog.map(p=>`<tr data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}" data-dept="${p.dept}">
+            ${S.catalog.map(p=>`<tr data-id="${p.id}" data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}" data-dept="${p.dept}">
               <td class="td-item">${p.item}</td>
               <td class="td-muted">${p.part||'&#8212;'}</td>
               <td>${p.vendor}</td>
               <td class="td-muted">${p.unit||'&#8212;'}</td>
               <td><span class="badge b-pending">${getDeptName(p.dept)}</span></td>
+              <td><button class="btn btn-danger btn-sm" onclick="adminDeleteItem('${p.id}')">Remove</button></td>
             </tr>`).join('')}
           </tbody>
         </table>
       </div>
     </div>`;
+}
+
+function openAdminAddItem() {
+  const existing = document.getElementById('admin-add-modal');
+  if (existing) existing.remove();
+  const vendors = [...new Set(S.catalog.map(p=>p.vendor))].sort();
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.id = 'admin-add-modal';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:520px">
+      <div class="modal-hdr">
+        <h3>+ Add Catalog Item</h3>
+        <button class="close-btn" onclick="document.getElementById('admin-add-modal').remove()">&#215;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Item Name *</label>
+          <input type="text" id="aai-name" placeholder="e.g. KIWO MEGA CLEAN ACTIVE" autofocus>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Part / SKU</label>
+            <input type="text" id="aai-part" placeholder="e.g. KW24406750">
+          </div>
+          <div class="form-group">
+            <label>Unit</label>
+            <input type="text" id="aai-unit" placeholder="e.g. 5GAL, CASE">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Vendor</label>
+            <input type="text" id="aai-vendor" list="aai-vendor-list" placeholder="Vendor name">
+            <datalist id="aai-vendor-list">${vendors.map(v=>`<option value="${v}">`).join('')}</datalist>
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <select id="aai-dept">
+              ${CFG.DEPTS.map(d=>`<option value="${d.id}">${d.name}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Min Stock</label>
+            <input type="number" id="aai-min" placeholder="optional" min="0">
+          </div>
+          <div class="form-group">
+            <label>Current Stock</label>
+            <input type="number" id="aai-stock" placeholder="optional" min="0">
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" onclick="document.getElementById('admin-add-modal').remove()">Cancel</button>
+        <button class="btn btn-primary" onclick="adminSaveNewItem()">Add to Catalog</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function adminSaveNewItem() {
+  const name = document.getElementById('aai-name')?.value.trim();
+  if (!name) { toast('Item name is required','err'); return; }
+  const part   = document.getElementById('aai-part')?.value.trim()||'';
+  const unit   = document.getElementById('aai-unit')?.value.trim()||'';
+  const vendor = document.getElementById('aai-vendor')?.value.trim()||'Unknown';
+  const dept   = document.getElementById('aai-dept')?.value||CFG.DEPTS[0]?.id||'';
+  const minStock = parseFloat(document.getElementById('aai-min')?.value)||null;
+  const stock    = parseFloat(document.getElementById('aai-stock')?.value)??null;
+  const id = 'CUSTOM-' + Date.now();
+  S.catalog.push({id, part, item:name, vendor, unit, dept, minStock, stock: isNaN(stock)?null:stock});
+  // Persist in demo mode
+  if (S.isDemo) {
+    const overrides = lsGet('catalog_overrides',{});
+    overrides[id] = {part,item:name,vendor,unit,dept,minStock,stock:isNaN(stock)?null:stock};
+    lsSet('catalog_overrides', overrides);
+  }
+  document.getElementById('admin-add-modal')?.remove();
+  renderAdminContent();
+  toast(`Added: ${name}`,'ok');
+}
+
+function adminDeleteItem(id) {
+  const prod = S.catalog.find(p=>p.id===id);
+  if (!prod) return;
+  if (!confirm(`Remove "${prod.item}" from the catalog?`)) return;
+  S.catalog = S.catalog.filter(p=>p.id!==id);
+  // Remove from demo overrides if present
+  if (S.isDemo) {
+    const overrides = lsGet('catalog_overrides',{});
+    delete overrides[id];
+    lsSet('catalog_overrides', overrides);
+  }
+  // Mark as deleted so it stays removed this session
+  const deleted = lsGet('catalog_deleted',[]);
+  deleted.push(id);
+  lsSet('catalog_deleted', deleted);
+  renderAdminContent();
+  toast(`Removed: ${prod.item}`,'ok');
 }
 function filterAdminCat(q) {
   const v = document.getElementById('ac-vendor')?.value.toLowerCase()||'';
