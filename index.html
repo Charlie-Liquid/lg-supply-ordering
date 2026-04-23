@@ -314,9 +314,11 @@ function doGet(e) {
       case 'orders':     result = getOrders(p.dept, p.key); break;
       case 'submitOrder':result = submitOrder(JSON.parse(p.data)); break;
       case 'updateStock':result = updateStock(JSON.parse(p.data)); break;
-      case 'updateOrder':result = updateOrderStatus(JSON.parse(p.data), p.key); break;
-      case 'getDepts':   result = getDepts(); break;
-      default:           result = { error: 'Unknown action: ' + p.action };
+      case 'updateOrder':  result = updateOrderStatus(JSON.parse(p.data), p.key); break;
+      case 'getDepts':     result = getDepts(); break;
+      case 'addProduct':   result = addProduct(JSON.parse(p.data)); break;
+      case 'deleteProduct':result = deleteProduct(p.id); break;
+      default:             result = { error: 'Unknown action: ' + p.action };
     }
   } catch(err) {
     result = { error: err.toString() };
@@ -440,6 +442,40 @@ function updateOrderStatus(data, key) {
     }
   }
   return { error: 'Order not found: ' + data.orderId };
+}
+
+function addProduct(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ps = ss.getSheetByName(SHEET_PRODUCTS);
+  if (!ps) return { error: 'Products sheet not found. Run ?action=init first.' };
+  const id = data.id || ('P-' + Date.now());
+  ps.appendRow([
+    id,
+    data.part   || '',
+    data.item   || '',
+    data.vendor || '',
+    data.unit   || '',
+    data.dept   || '',
+    data.minStock !== null && data.minStock !== undefined ? data.minStock : '',
+    data.stock    !== null && data.stock    !== undefined ? data.stock    : '',
+    '',
+    data.notes  || ''
+  ]);
+  return { ok: true, id };
+}
+
+function deleteProduct(id) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ps = ss.getSheetByName(SHEET_PRODUCTS);
+  if (!ps) return { error: 'Products sheet not found.' };
+  const rows = ps.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(id)) {
+      ps.deleteRow(i + 1);
+      return { ok: true };
+    }
+  }
+  return { error: 'Product not found: ' + id };
 }
 
 function getDepts() {
@@ -796,6 +832,28 @@ async function updateOrderStatusApi(orderId, status, adminNotes) {
     return {ok:true};
   }
   return await apiCall({action:'updateOrder', data:{orderId, status, adminNotes}, key:CFG.ADMIN_PASS});
+}
+
+async function addProductApi(data) {
+  if (isDemo()) {
+    const overrides = lsGet('catalog_overrides', {});
+    overrides[data.id] = data;
+    lsSet('catalog_overrides', overrides);
+    return {ok:true};
+  }
+  return await apiCall({action:'addProduct', data});
+}
+
+async function deleteProductApi(id) {
+  if (isDemo()) {
+    const overrides = lsGet('catalog_overrides', {});
+    delete overrides[id];
+    lsSet('catalog_overrides', overrides);
+    const deleted = lsGet('catalog_deleted', []);
+    if (!deleted.includes(id)) { deleted.push(id); lsSet('catalog_deleted', deleted); }
+    return {ok:true};
+  }
+  return await apiCall({action:'deleteProduct', id});
 }
 
 // ================================================================
@@ -1738,45 +1796,46 @@ function openAdminAddItem() {
   document.body.appendChild(overlay);
 }
 
-function adminSaveNewItem() {
+async function adminSaveNewItem() {
   const name = document.getElementById('aai-name')?.value.trim();
   if (!name) { toast('Item name is required','err'); return; }
-  const part   = document.getElementById('aai-part')?.value.trim()||'';
-  const unit   = document.getElementById('aai-unit')?.value.trim()||'';
-  const vendor = document.getElementById('aai-vendor')?.value.trim()||'Unknown';
-  const dept   = document.getElementById('aai-dept')?.value||CFG.DEPTS[0]?.id||'';
-  const minStock = parseFloat(document.getElementById('aai-min')?.value)||null;
-  const stock    = parseFloat(document.getElementById('aai-stock')?.value)??null;
-  const id = 'CUSTOM-' + Date.now();
-  S.catalog.push({id, part, item:name, vendor, unit, dept, minStock, stock: isNaN(stock)?null:stock});
-  // Persist in demo mode
-  if (S.isDemo) {
-    const overrides = lsGet('catalog_overrides',{});
-    overrides[id] = {part,item:name,vendor,unit,dept,minStock,stock:isNaN(stock)?null:stock};
-    lsSet('catalog_overrides', overrides);
-  }
+  const part     = document.getElementById('aai-part')?.value.trim()||'';
+  const unit     = document.getElementById('aai-unit')?.value.trim()||'';
+  const vendor   = document.getElementById('aai-vendor')?.value.trim()||'Unknown';
+  const dept     = document.getElementById('aai-dept')?.value||CFG.DEPTS[0]?.id||'';
+  const minVal   = document.getElementById('aai-min')?.value;
+  const stockVal = document.getElementById('aai-stock')?.value;
+  const minStock = minVal   !== '' ? parseFloat(minVal)   : null;
+  const stock    = stockVal !== '' ? parseFloat(stockVal) : null;
+  const id = 'P-' + Date.now();
+  const newProd = {id, part, item:name, vendor, unit, dept, minStock, stock};
+  // Optimistic UI update
+  S.catalog.push(newProd);
   document.getElementById('admin-add-modal')?.remove();
   renderAdminContent();
-  toast(`Added: ${name}`,'ok');
+  // Save to API / localStorage
+  const r = await addProductApi(newProd);
+  if (r?.ok || r) {
+    toast(`Added: ${name}`, 'ok');
+  } else {
+    toast('Saved locally — reconnect to sync to Sheets', '');
+  }
 }
 
-function adminDeleteItem(id) {
+async function adminDeleteItem(id) {
   const prod = S.catalog.find(p=>p.id===id);
   if (!prod) return;
   if (!confirm(`Remove "${prod.item}" from the catalog?`)) return;
+  // Optimistic UI update
   S.catalog = S.catalog.filter(p=>p.id!==id);
-  // Remove from demo overrides if present
-  if (S.isDemo) {
-    const overrides = lsGet('catalog_overrides',{});
-    delete overrides[id];
-    lsSet('catalog_overrides', overrides);
-  }
-  // Mark as deleted so it stays removed this session
-  const deleted = lsGet('catalog_deleted',[]);
-  deleted.push(id);
-  lsSet('catalog_deleted', deleted);
   renderAdminContent();
-  toast(`Removed: ${prod.item}`,'ok');
+  // Delete from API / localStorage
+  const r = await deleteProductApi(id);
+  if (r?.ok || r) {
+    toast(`Removed: ${prod.item}`, 'ok');
+  } else {
+    toast('Removed locally — reconnect to sync to Sheets', '');
+  }
 }
 function filterAdminCat(q) {
   const v = document.getElementById('ac-vendor')?.value.toLowerCase()||'';
