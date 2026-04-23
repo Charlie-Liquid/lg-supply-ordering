@@ -268,6 +268,17 @@ input:focus,select:focus,textarea:focus{border-left-width:2px;border-left-color:
 /* Header logo slight brightness boost */
 .hdr-logo img{filter:brightness(1.08);transition:filter .15s}
 .hdr-logo img:hover{filter:brightness(1.2)}
+
+/* ── STOCK SLIDER ─────────────────────────────────────── */
+.stock-slider-wrap{display:flex;align-items:center;gap:10px;width:100%;min-width:150px;padding:2px 0}
+.stock-slider-num{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;min-width:22px;text-align:right;transition:color .15s}
+.stock-slider{-webkit-appearance:none;appearance:none;flex:1;height:5px;border-radius:2px;outline:none;cursor:pointer;border:none;background:var(--border);transition:height .12s}
+.stock-slider:hover{height:7px}
+.stock-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid currentColor;cursor:grab;box-shadow:0 1px 6px rgba(0,0,0,.5);transition:transform .1s,box-shadow .1s}
+.stock-slider::-webkit-slider-thumb:hover{transform:scale(1.25);box-shadow:0 2px 10px rgba(0,0,0,.6)}
+.stock-slider::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.35)}
+.stock-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid currentColor;cursor:grab;box-shadow:0 1px 6px rgba(0,0,0,.5)}
+.stock-slider::-moz-range-track{height:5px;border-radius:2px;background:var(--border)}
 </style>
 </head>
 <body>
@@ -974,22 +985,76 @@ function renderInventoryTab() {
     </div>`;
 }
 
+function stockColor(st, val) {
+  if (st==='critical' || (!st && val===0)) return '#ef4444';
+  if (st==='low') return '#f59e0b';
+  return '#22c55e';
+}
+
+function sliderStyle(val, max, color) {
+  const pct = max > 0 ? Math.min(100, Math.round((val / max) * 100)) : 0;
+  return `background:linear-gradient(to right,${color} ${pct}%,#252525 ${pct}%);color:${color}`;
+}
+
 function invRow(p, showDept) {
   const st = stockStatus(p);
-  const bar = p.minStock ? `<div class="stock-bar-wrap">
-    <span style="min-width:24px;text-align:right">${p.stock??'?'}</span>
-    <div class="stock-bar"><div class="stock-bar-fill" style="width:${Math.min(100,((p.stock||0)/(p.minStock*2))*100)}%;background:${st==='critical'?'#dc2626':st==='low'?'#d97706':'#059669'}"></div></div>
-  </div>` : `<span>${p.stock??'&#8212;'}</span>`;
+  let bar;
+  if (p.stock !== null && p.stock !== undefined) {
+    const maxStock = Math.max((p.minStock || 0) * 4, (p.stock || 0) + 10, 20);
+    const color = stockColor(st, p.stock);
+    bar = `<div class="stock-slider-wrap">
+      <span class="stock-slider-num" id="snum-${p.id}" style="color:${color}">${p.stock??0}</span>
+      <input type="range" class="stock-slider"
+        id="sld-${p.id}" min="0" max="${maxStock}" value="${p.stock??0}"
+        style="${sliderStyle(p.stock??0, maxStock, color)}"
+        data-id="${p.id}" data-min="${p.minStock??0}" data-max="${maxStock}"
+        oninput="slideStock(this)" onchange="saveStock(this)">
+    </div>`;
+  } else {
+    bar = `<span class="td-muted" style="cursor:pointer;font-size:11px" onclick="initStock('${p.id}')">+ Set stock</span>`;
+  }
   return `<tr data-id="${p.id}" data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}">
     <td>${stockBadge(p)}</td>
-    <td class="td-item"><span contenteditable="true" spellcheck="false" style="outline:none;border-bottom:1px dashed transparent;cursor:text;display:inline-block;min-width:60px;padding:1px 3px;border-radius:3px" onfocus="this.style.borderBottomColor='#3b82f6';this.style.background='#eff6ff'" onblur="saveItemName('${p.id}',this.textContent.trim());this.style.borderBottomColor='transparent';this.style.background=''" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">${p.item}</span>${showDept?`<div class="td-muted">${getDeptName(p.dept)}</div>`:''}</td>
+    <td class="td-item"><span contenteditable="true" spellcheck="false" style="outline:none;border-bottom:1px dashed transparent;cursor:text;display:inline-block;min-width:60px;padding:1px 3px;border-radius:3px" onfocus="this.style.borderBottomColor='var(--primary)';this.style.background='rgba(255,85,0,.06)'" onblur="saveItemName('${p.id}',this.textContent.trim());this.style.borderBottomColor='transparent';this.style.background=''" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">${p.item}</span>${showDept?`<div class="td-muted">${getDeptName(p.dept)}</div>`:''}</td>
     <td class="td-muted">${p.part||'&#8212;'}</td>
     <td>${p.vendor}</td>
     <td class="td-muted">${p.unit||'&#8212;'}</td>
-    <td style="text-align:center">${bar}</td>
+    <td style="min-width:180px">${bar}</td>
     <td style="text-align:center" class="td-muted">${p.minStock??'&#8212;'}</td>
-    <td style="white-space:nowrap"><input type="number" min="1" value="1" id="qty-${p.id}" style="width:52px;padding:4px 6px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;text-align:center;vertical-align:middle;margin-right:4px"><button class="btn btn-sm ${st==='critical'?'btn-danger':st==='low'?'btn-warn':'btn-secondary'}" onclick="addToCart('${p.id}')">+ Request</button></td>
+    <td style="white-space:nowrap"><input type="number" min="1" value="1" id="qty-${p.id}" style="width:52px;padding:4px 6px;border:1px solid var(--border);border-radius:2px;font-size:13px;text-align:center;vertical-align:middle;margin-right:4px;background:#0a0a0a;color:var(--text)"><button class="btn btn-sm ${st==='critical'?'btn-danger':st==='low'?'btn-warn':'btn-secondary'}" onclick="addToCart('${p.id}')">+ Request</button></td>
   </tr>`;
+}
+
+function slideStock(el) {
+  const id = el.dataset.id;
+  const val = parseInt(el.value);
+  const minStock = parseInt(el.dataset.min) || 0;
+  const maxStock = parseInt(el.dataset.max) || 20;
+  const st = !minStock ? (val===0?'critical':'ok') : val<=minStock?'critical':val<=minStock*1.5?'low':'ok';
+  const color = stockColor(st, val);
+  el.style.cssText = sliderStyle(val, maxStock, color);
+  const numEl = document.getElementById('snum-' + id);
+  if (numEl) { numEl.textContent = val; numEl.style.color = color; }
+}
+
+async function saveStock(el) {
+  const id = el.dataset.id;
+  const val = parseInt(el.value);
+  const prod = S.catalog.find(p => p.id === id);
+  if (!prod) return;
+  prod.stock = val;
+  // Refresh badge
+  const row = document.querySelector(`tr[data-id="${id}"]`);
+  if (row) { const bd = row.querySelector('td:first-child'); if (bd) bd.innerHTML = stockBadge(prod); }
+  const r = await updateStockApi(id, val, prod.minStock, null);
+  if (r?.ok || r) toast(`Stock: ${prod.item} → ${val}`, 'ok');
+}
+
+function initStock(id) {
+  const prod = S.catalog.find(p => p.id === id);
+  if (!prod) return;
+  prod.stock = 0;
+  renderTabContent();
 }
 
 function filterInv(q) {
