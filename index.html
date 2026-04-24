@@ -811,7 +811,21 @@ async function submitOrderApi(data) {
     lsSet('orders', orders);
     return {ok:true, orderId:order.id};
   }
-  return await apiCall({action:'submitOrder', data});
+  const result = await apiCall({action:'submitOrder', data});
+  // Push notification via ntfy.sh
+  try {
+    const itemList = data.items.map(i => i.item + ' x' + i.qty).join(', ');
+    await fetch('https://ntfy.sh/lg-supply-orders-liquidgraphics', {
+      method: 'POST',
+      headers: {
+        'Title': 'New Supply Order — ' + data.dept,
+        'Priority': 'high',
+        'Tags': 'shopping'
+      },
+      body: 'From: ' + data.requester + '\nItems: ' + itemList + (data.notes ? '\nNotes: ' + data.notes : '')
+    });
+  } catch(e) {}
+  return result;
 }
 
 async function updateStockApi(id, stock, minStock, reorderPoint) {
