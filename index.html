@@ -6,7 +6,8 @@
 <title>Liquid Graphics &#8212; Supply Ordering</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
 <style>
 :root{
   --primary:#ff5500;--primary-light:#ff7733;--primary-pale:#1a0900;
@@ -15,7 +16,7 @@
   --text:#ede8de;--muted:#5a5650;--shadow:0 2px 12px rgba(0,0,0,.5)
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Barlow',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+body{font-family:'Space Grotesk','Barlow',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
 a{color:var(--primary);text-decoration:none}
 
 /* Header */
@@ -23,23 +24,23 @@ a{color:var(--primary);text-decoration:none}
 .hdr-logo{display:flex;align-items:center}
 .hdr-logo img{height:44px;width:auto;object-fit:contain}
 .hdr-left{display:flex;align-items:center}
-.hdr-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text);line-height:1}
+.hdr-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--text);line-height:1}
 .hdr-right{display:flex;align-items:center;justify-content:flex-end;gap:10px}
-.hdr-badge{background:transparent;border:1px solid var(--border);padding:3px 12px;border-radius:2px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--primary);font-family:'Barlow Condensed',sans-serif}
+.hdr-badge{background:transparent;border:1px solid var(--border);padding:3px 12px;border-radius:2px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--primary);font-family:'Space Grotesk',sans-serif}
 
 /* Layout */
 .wrap{max-width:1200px;margin:0 auto;padding:24px}
 
 /* Tabs */
 .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px;gap:0}
-.tab{padding:12px 20px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab{padding:12px 20px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;display:inline-flex;align-items:center;gap:7px}
 .tab:hover{color:var(--text)}
 .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
 
 /* Cards */
 .card{background:var(--card);border:1px solid var(--border);border-radius:3px;margin-bottom:18px;overflow:hidden}
 .card-hdr{padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card2)}
-.card-hdr h3{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.card-hdr h3{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.12em}
 .card-body{padding:20px}
 
 /* Stats */
@@ -49,8 +50,8 @@ a{color:var(--primary);text-decoration:none}
 .stat.warn::before{background:var(--warning)}
 .stat.danger::before{background:var(--danger)}
 .stat.ok::before{background:var(--success)}
-.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:800;color:var(--text);line-height:1}
-.stat-lbl{font-size:10px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.08em;font-family:'Barlow Condensed',sans-serif;font-weight:700}
+.stat-val{font-family:'Space Grotesk',sans-serif;font-size:44px;font-weight:700;color:var(--text);line-height:1}
+.stat-lbl{font-size:10px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.14em;font-family:'Space Grotesk',sans-serif;font-weight:600}
 .stat.warn .stat-val{color:var(--warning)}
 .stat.danger .stat-val{color:var(--danger)}
 .stat.ok .stat-val{color:var(--success)}
@@ -85,7 +86,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .td-muted{color:var(--muted);font-size:12px;font-family:'IBM Plex Mono',monospace}
 
 /* Buttons */
-.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;border:none;transition:all .12s;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:2px;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.10em;cursor:pointer;border:none;transition:all .12s;white-space:nowrap}
 .btn-primary{background:var(--primary);color:#fff}
 .btn-primary:hover{background:var(--primary-light)}
 .btn-secondary{background:transparent;color:var(--muted);border:1px solid var(--border)}
@@ -141,7 +142,7 @@ select option{background:#151515}
 .landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;padding:40px;background:var(--bg)}
 .landing-top{text-align:center}
 .landing-logo{font-size:48px;margin-bottom:16px}
-.landing h1{font-family:'Barlow Condensed',sans-serif;font-size:48px;font-weight:800;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:.03em}
+.landing h1{font-family:'Space Grotesk',sans-serif;font-size:48px;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:.10em}
 .landing p{color:var(--muted);max-width:380px;line-height:1.6}
 .dept-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;max-width:620px;width:100%}
 .dept-card{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:22px 16px;text-align:center;cursor:pointer;transition:all .18s;font-weight:600}
@@ -154,7 +155,7 @@ select option{background:#151515}
 
 /* Admin login */
 .login-box{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:36px;max-width:360px;width:100%}
-.login-box h2{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;margin-bottom:4px;text-align:center;text-transform:uppercase;letter-spacing:.04em}
+.login-box h2{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;margin-bottom:4px;text-align:center;text-transform:uppercase;letter-spacing:.14em}
 .login-box p{color:var(--muted);text-align:center;margin-bottom:24px;font-size:13px}
 
 /* Chips */
@@ -885,9 +886,9 @@ function stockStatus(p) {
 function stockBadge(p) {
   const st = stockStatus(p);
   if (!st) return '<span class="badge b-ok">&#8212;</span>';
-  if (st==='critical') return '<span class="badge b-crit">&#128308; Critical</span>';
-  if (st==='low')      return '<span class="badge b-low">&#128993; Low</span>';
-  return '<span class="badge b-ok">&#128994; OK</span>';
+  if (st==='critical') return '<span class="badge b-crit"><i class="ph ph-warning-circle"></i> Critical</span>';
+  if (st==='low')      return '<span class="badge b-low"><i class="ph ph-warning"></i> Low</span>';
+  return '<span class="badge b-ok"><i class="ph ph-check-circle"></i> OK</span>';
 }
 
 function orderBadge(status) {
@@ -980,7 +981,7 @@ async function renderDept() {
       <div class="hdr-right">
         <span class="hdr-badge">${dept.name}</span>
         <button class="btn btn-secondary btn-sm cart-btn" onclick="openOrderModal()" id="cart-btn">
-          &#128722; Request Order
+          <i class="ph ph-shopping-cart"></i> Request Order
           <span class="cart-count hidden" id="cart-count">0</span>
         </button>
       </div>
@@ -988,18 +989,18 @@ async function renderDept() {
     <div class="wrap">
       ${S.isDemo?`<div class="alert alert-demo">&#9888;&#65039; <strong>Demo Mode</strong> &#8212; Orders saved in browser only. Configure Google Sheets to persist data.</div>`:''}
       ${critItems.length?`<div class="alert alert-crit">
-        &#128308; <strong>Critical &#8212; Order Immediately:</strong>
+        <i class="ph ph-warning-circle"></i> <strong>Critical &#8212; Order Immediately:</strong>
         <ul>${critItems.map(p=>`<li>${p.item} (${p.vendor}) &#8212; Stock: ${p.stock??'?'}, Min: ${p.minStock}</li>`).join('')}</ul>
       </div>`:''}
       ${lowItems.length?`<div class="alert alert-warn">
-        &#128993; <strong>Running Low &#8212; Order Soon:</strong>
+        <i class="ph ph-warning"></i> <strong>Running Low &#8212; Order Soon:</strong>
         <ul>${lowItems.map(p=>`<li>${p.item} &#8212; Stock: ${p.stock}, Min: ${p.minStock}</li>`).join('')}</ul>
       </div>`:''}
 
       <div class="tabs">
-        <div class="tab ${S.tab==='inventory'?'active':''}" onclick="switchTab('inventory')">&#128230; My Inventory</div>
-        <div class="tab ${S.tab==='orders'?'active':''}" onclick="switchTab('orders')">&#128203; My Orders</div>
-        <div class="tab ${S.tab==='catalog'?'active':''}" onclick="switchTab('catalog')">&#128450; Full Catalog</div>
+        <div class="tab ${S.tab==='inventory'?'active':''}" onclick="switchTab('inventory')"><i class="ph ph-warehouse"></i> My Inventory</div>
+        <div class="tab ${S.tab==='orders'?'active':''}" onclick="switchTab('orders')"><i class="ph ph-clipboard-text"></i> My Orders</div>
+        <div class="tab ${S.tab==='catalog'?'active':''}" onclick="switchTab('catalog')"><i class="ph ph-books"></i> Full Catalog</div>
       </div>
 
       <div id="tab-content"></div>
@@ -1028,7 +1029,7 @@ function renderTabContent() {
 function renderInventoryTab() {
   const prods = S.catalog.filter(p=>p.dept===S.dept && p.stock!==null);
   const vendors = [...new Set(prods.map(p=>p.vendor))].sort();
-  if (!prods.length) return `<div class="empty-state"><div class="icon">&#128230;</div><p>No inventory data yet. An admin needs to set stock levels.</p></div>`;
+  if (!prods.length) return `<div class="empty-state"><div class="icon"><i class="ph ph-warehouse" style="font-size:36px;opacity:.35"></i></div><p>No inventory data yet. An admin needs to set stock levels.</p></div>`;
   return `
     <div class="card">
       <div class="card-hdr">
@@ -1144,7 +1145,7 @@ function filterInvVendor(v) { filterInv(document.getElementById('inv-search')?.v
 
 function renderOrdersTab() {
   const orders = S.orders;
-  if (!orders.length) return `<div class="empty-state"><div class="icon">&#128203;</div><p>No order requests yet. Use the Request Order button to submit one.</p></div>`;
+  if (!orders.length) return `<div class="empty-state"><div class="icon"><i class="ph ph-clipboard-text" style="font-size:36px;opacity:.35"></i></div><p>No order requests yet. Use the Request Order button to submit one.</p></div>`;
   return `
     <div class="card">
       <div class="card-hdr"><h3>My Order History</h3></div>
@@ -1312,7 +1313,7 @@ function openOrderModal() {
   overlay.innerHTML = `
     <div class="modal">
       <div class="modal-hdr">
-        <h3>&#128722; Submit Order Request</h3>
+        <h3><i class="ph ph-shopping-cart"></i> Submit Order Request</h3>
         <button class="close-btn" onclick="document.getElementById('order-modal').remove()">&#215;</button>
       </div>
       <div class="modal-body">
@@ -1334,7 +1335,7 @@ function openOrderModal() {
       </div>
       <div class="modal-foot">
         <button class="btn btn-secondary" onclick="document.getElementById('order-modal').remove()">Cancel</button>
-        <button class="btn btn-primary" onclick="submitOrder()">&#128228; Submit Request</button>
+        <button class="btn btn-primary" onclick="submitOrder()"><i class="ph ph-paper-plane-tilt"></i> Submit Request</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -1454,9 +1455,9 @@ function renderAdminLogin() {
           <label>Admin Password</label>
           <input type="password" id="admin-pw" placeholder="Enter password" onkeydown="if(event.key==='Enter')adminLogin()">
         </div>
-        <button class="btn btn-primary" style="width:100%" onclick="adminLogin()">Sign In &#8594;</button>
+        <button class="btn btn-primary" style="width:100%" onclick="adminLogin()"><i class="ph ph-sign-in"></i> Sign In</button>
         <div style="text-align:center;margin-top:14px">
-          <a href="?" style="color:var(--muted);font-size:13px">&#8592; Back to departments</a>
+          <a href="?" style="color:var(--muted);font-size:13px;display:inline-flex;align-items:center;gap:4px"><i class="ph ph-arrow-left"></i> Back to departments</a>
         </div>
       </div>
     </div>
@@ -1494,7 +1495,7 @@ async function renderAdmin() {
       </div>
       <div class="hdr-right">
         ${S.isDemo?'<span class="badge b-demo">Demo Mode</span>':''}
-        <a href="?" class="btn btn-secondary btn-sm">&#8592; Departments</a>
+        <a href="?" class="btn btn-secondary btn-sm"><i class="ph ph-arrow-left"></i> Departments</a>
       </div>
     </div>
     <div class="wrap">
@@ -1514,9 +1515,9 @@ async function renderAdmin() {
       </div>
 
       <div class="tabs" id="admin-tabs">
-        <div class="tab ${S.tab==='orders'?'active':''}" onclick="adminTab('orders')">&#128203; Orders${pending?` <span class="badge b-crit" style="margin-left:6px">${pending}</span>`:''}  </div>
-        <div class="tab ${S.tab==='inventory'?'active':''}" onclick="adminTab('inventory')">&#128230; Inventory</div>
-        <div class="tab ${S.tab==='catalog'?'active':''}" onclick="adminTab('catalog')">&#128450; Catalog</div>
+        <div class="tab ${S.tab==='orders'?'active':''}" onclick="adminTab('orders')"><i class="ph ph-clipboard-text"></i> Orders${pending?` <span class="badge b-crit" style="margin-left:6px">${pending}</span>`:''}  </div>
+        <div class="tab ${S.tab==='inventory'?'active':''}" onclick="adminTab('inventory')"><i class="ph ph-warehouse"></i> Inventory</div>
+        <div class="tab ${S.tab==='catalog'?'active':''}" onclick="adminTab('catalog')"><i class="ph ph-books"></i> Catalog</div>
       </div>
       <div id="admin-content"></div>
     </div>
