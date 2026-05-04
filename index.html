@@ -212,6 +212,10 @@ body{background-image:radial-gradient(circle,rgba(255,255,255,.038) 1px,transpar
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes titleReveal{from{opacity:0;letter-spacing:.18em}to{opacity:1;letter-spacing:.03em}}
 @keyframes critPulse{0%,100%{border-color:rgba(239,68,68,.25);box-shadow:none}50%{border-color:rgba(239,68,68,.9);box-shadow:0 0 7px rgba(239,68,68,.35)}}
+@keyframes rowFlashCrit{0%,100%{background:transparent}50%{background:rgba(239,68,68,.10);box-shadow:inset 3px 0 0 #ef4444}}
+@keyframes rowFlashLow{0%,100%{background:transparent}50%{background:rgba(245,158,11,.08);box-shadow:inset 3px 0 0 #f59e0b}}
+tr[data-status="critical"]{animation:rowFlashCrit 2s ease-in-out infinite}
+tr[data-status="low"]{animation:rowFlashLow 3s ease-in-out infinite}
 @keyframes modalIn{from{opacity:0;transform:translateY(-10px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes cardIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 
@@ -988,14 +992,7 @@ async function renderDept() {
     </div>
     <div class="wrap">
       ${S.isDemo?`<div class="alert alert-demo">&#9888;&#65039; <strong>Demo Mode</strong> &#8212; Orders saved in browser only. Configure Google Sheets to persist data.</div>`:''}
-      ${critItems.length?`<div class="alert alert-crit">
-        <i class="ph ph-warning-circle"></i> <strong>Critical &#8212; Order Immediately:</strong>
-        <ul>${critItems.map(p=>`<li>${p.item} (${p.vendor}) &#8212; Stock: ${p.stock??'?'}, Min: ${p.minStock}</li>`).join('')}</ul>
-      </div>`:''}
-      ${lowItems.length?`<div class="alert alert-warn">
-        <i class="ph ph-warning"></i> <strong>Running Low &#8212; Order Soon:</strong>
-        <ul>${lowItems.map(p=>`<li>${p.item} &#8212; Stock: ${p.stock}, Min: ${p.minStock}</li>`).join('')}</ul>
-      </div>`:''}
+
 
       <div class="tabs">
         <div class="tab ${S.tab==='inventory'?'active':''}" onclick="switchTab('inventory')"><i class="ph ph-warehouse"></i> My Inventory</div>
@@ -1089,7 +1086,7 @@ function invRow(p, showDept) {
   } else {
     bar = `<span class="td-muted" style="cursor:pointer;font-size:11px" onclick="initStock('${p.id}')">+ Set stock</span>`;
   }
-  return `<tr data-id="${p.id}" data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}">
+  return `<tr data-id="${p.id}" data-item="${p.item.toLowerCase()}" data-vendor="${p.vendor.toLowerCase()}" data-status="${st||''}">
     <td>${stockBadge(p)}</td>
     <td class="td-item"><span contenteditable="true" spellcheck="false" style="outline:none;border-bottom:1px dashed transparent;cursor:text;display:inline-block;min-width:60px;padding:1px 3px;border-radius:3px" onfocus="this.style.borderBottomColor='var(--primary)';this.style.background='rgba(255,85,0,.06)'" onblur="saveItemName('${p.id}',this.textContent.trim());this.style.borderBottomColor='transparent';this.style.background=''" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">${p.item}</span>${showDept?`<div class="td-muted">${getDeptName(p.dept)}</div>`:''}</td>
     <td class="td-muted">${p.part||'&#8212;'}</td>
